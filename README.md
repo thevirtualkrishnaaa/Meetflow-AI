@@ -1,6 +1,6 @@
 <div align="center">
-  <img src="public/logo.svg" width="64" height="64" alt="FounderMacha Logo" />
-  <h1>FounderMacha | Executive Meeting & Video Call Engine</h1>
+  <img src="public/logo.svg" width="64" height="64" alt="Foundermatcha Logo" />
+  <h1>Foundermatcha | Executive Meeting & Video Call Engine</h1>
   <p><strong>Everyday Online Video Huddles, Psychology-Backed Chemistry Alignment & Executive Execution Suite</strong></p>
 
   <p>
@@ -8,7 +8,7 @@
   </p>
 
   <p>
-    <img src="https://img.shields.io/badge/Brand-FounderMacha-78c452?style=flat-square" alt="FounderMacha" />
+    <img src="https://img.shields.io/badge/Brand-Foundermatcha-78c452?style=flat-square" alt="Foundermatcha" />
     <img src="https://img.shields.io/badge/Video_Suite-WebRTC_Everyday_Huddle-black?style=flat-square" alt="Video Suite" />
     <img src="https://img.shields.io/badge/Gemini-3.8_Flash-4285F4?style=flat-square&logo=google" alt="Gemini 3.8 Flash" />
     <img src="https://img.shields.io/badge/React-19.0-61DAFB?style=flat-square&logo=react" alt="React 19" />
@@ -19,9 +19,9 @@
 
 ---
 
-## 🍵 What is FounderMacha?
+## 🍵 What is Foundermatcha?
 
-**FounderMacha** is the dedicated internal operational engine designed to connect startup founders to highly compatible software engineers based on deep alignment in vision, mission, psychology, and work style.
+**Foundermatcha** is the dedicated internal operational engine designed to connect startup founders to highly compatible software engineers based on deep alignment in vision, mission, psychology, and work style.
 
 This platform powers our everyday online executive meetings, daily engineering standups, and strategic alignment sessions—converting speech and video discussions into accountable decisions, assigned sprint tasks, and unblocked roadmaps.
 
@@ -33,7 +33,7 @@ This platform powers our everyday online executive meetings, daily engineering s
    - **Active Speaker Waveform Pulse**: Matcha green (`#78c452`) ring detects and highlights the speaking participant dynamically.
    - **3-Minute Daily Standup Protocol**: Dedicated per-person timers tracking 1) Yesterday's deliverables, 2) Today's critical sprint path, and 3) Blockers & chemistry needs.
    - **Live In-Call AI Note-Taker**: Real-time speech stream auto-detects decisions and tasks during the call with confidence scoring.
-   - **1-Click End & Sync**: Automatically converts live discussions into a published meeting draft in the FounderMacha hub.
+   - **1-Click End & Sync**: Automatically converts live discussions into a published meeting draft in the Foundermatcha hub.
 
 2. 🧠 **Mapping Human Chemistry & Psychology-Backed Algorithms**:
    - Matches and aligns founders and engineers not just on technical skills, but on working style, equity vs cash expectations, risk appetite, and collaboration habits.
@@ -65,8 +65,8 @@ When the server is running, access the application in your browser:
 
 | Account | Role | Credentials | Workspace |
 | :--- | :--- | :--- | :--- |
-| **Krishna (Founder)** | Founder & CEO | `krishna@foundermacha.com` / `password123` | FounderMacha Core |
-| **Admin Access** | Executive Account | `admin@meetingflow.ai` / `password123` | FounderMacha Core |
+| **Krishna (Founder)** | Founder & CEO | `krishna@foundermatcha.com` / `password123` | Foundermatcha Core |
+| **Admin Access** | Executive Account | `admin@meetingflow.ai` / `password123` | Foundermatcha Core |
 | **New Team Member** | Custom Role | Sign up on the **"Join Company Workspace"** tab | Custom Organization |
 
 ---
@@ -97,7 +97,7 @@ npm run build
 
 ---
 
-## 🎨 FounderMacha Design System
+## 🎨 Foundermatcha Design System
 
 - **Brand Primary Accent**: `#78c452` (Matcha Green), `#67b342` (Hover)
 - **Secondary Surfaces**: `#0b0f19` (Obsidian Slate), `#111827`, `#f8fafc`
@@ -107,5 +107,5 @@ npm run build
 ---
 
 <div align="center">
-  <p>© 2026 FounderMacha. Built for Founders & Engineers.</p>
+  <p>© 2026 Foundermatcha. Built for Founders & Engineers.</p>
 </div>

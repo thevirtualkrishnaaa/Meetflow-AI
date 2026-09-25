@@ -245,7 +245,7 @@ export const SettingsScreen: React.FC = () => {
             <Shield className="w-4 h-4 text-[#4b8b29]" />
             <div>
               <h2 className="text-sm font-semibold text-neutral-900">Sanctuary Privacy & Stealth Protocol</h2>
-              <span className="text-[11px] text-neutral-400 font-mono">Foundational FounderMacha Security</span>
+              <span className="text-[11px] text-neutral-400 font-mono">Foundational Foundermatcha Security</span>
             </div>
           </div>
 
@@ -289,7 +289,7 @@ export const SettingsScreen: React.FC = () => {
           {savedNotice ? (
             <span className="text-xs font-medium text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 flex items-center gap-1.5 animate-fadeIn">
               <Check className="w-3.5 h-3.5" />
-              <span>FounderMacha preferences saved successfully</span>
+              <span>Foundermatcha preferences saved successfully</span>
             </span>
           ) : (
             <span />

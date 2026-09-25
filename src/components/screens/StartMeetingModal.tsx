@@ -30,7 +30,7 @@ export const StartMeetingModal: React.FC = () => {
   } = useMeetingFlow();
 
   const [mode, setMode] = useState<'record' | 'upload' | 'import'>('record');
-  const [title, setTitle] = useState('FounderMacha Daily Executive Huddle');
+  const [title, setTitle] = useState('Foundermatcha Daily Executive Huddle');
   const [project, setProject] = useState('Psychology Matching Engine');
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>(() =>
     teamMembers.map((m) => m.id)
@@ -312,7 +312,7 @@ export const StartMeetingModal: React.FC = () => {
                   Prefer a live video call with camera, mic & standup timer?
                 </span>
                 <span className="text-[11px] text-[#78c452] font-mono">
-                  FounderMacha Everyday Video Room is active
+                  Foundermatcha Everyday Video Room is active
                 </span>
               </div>
             </div>

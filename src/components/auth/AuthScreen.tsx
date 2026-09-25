@@ -38,7 +38,7 @@ export const AuthScreen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState('Founder & CEO');
-  const [workspaceName, setWorkspaceName] = useState('FounderMacha Core');
+  const [workspaceName, setWorkspaceName] = useState('Foundermatcha Core');
   const [department, setDepartment] = useState('Leadership');
   const [avatarColor, setAvatarColor] = useState(AVATAR_COLORS[0].class);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +52,7 @@ export const AuthScreen: React.FC = () => {
     try {
       const success = await login(email, password);
       if (!success) {
-        setError('Invalid credentials. You can also click "Instant FounderMacha Access" below.');
+        setError('Invalid credentials. You can also click "Instant Foundermatcha Access" below.');
       }
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check your credentials.');
@@ -85,7 +85,7 @@ export const AuthScreen: React.FC = () => {
         email: email.trim(),
         password,
         role: role.trim() || 'Founder & CEO',
-        workspaceName: workspaceName.trim() || 'FounderMacha Core',
+        workspaceName: workspaceName.trim() || 'Foundermatcha Core',
         department,
         avatarColor,
       });
@@ -100,7 +100,7 @@ export const AuthScreen: React.FC = () => {
     setError(null);
     setLoading(true);
     try {
-      await login('krishna@foundermacha.com', 'password123');
+      await login('krishna@foundermatcha.com', 'password123');
     } catch (e: any) {
       // Fallback
       await login('admin@meetingflow.ai', 'password123');
@@ -111,7 +111,7 @@ export const AuthScreen: React.FC = () => {
 
   return (
     <div className="min-h-screen w-screen flex flex-col md:flex-row bg-neutral-950 text-neutral-100 overflow-x-hidden font-sans">
-      {/* Left Column: FounderMacha Brand Hero & Philosophy */}
+      {/* Left Column: Foundermatcha Brand Hero & Philosophy */}
       <div className="w-full md:w-5/12 bg-gradient-to-br from-neutral-950 via-neutral-900 to-[#121c10] p-8 sm:p-12 lg:p-16 flex flex-col justify-between border-b md:border-b-0 md:border-r border-neutral-800">
         <div>
           {/* Logo */}
@@ -129,13 +129,13 @@ export const AuthScreen: React.FC = () => {
               Where Founders and Engineers Align, Huddle, and Ship.
             </h1>
             <p className="text-sm text-neutral-300 leading-relaxed">
-              Tailored specifically for FounderMacha’s internal operations. Connect daily via high-fidelity
+              Tailored specifically for Foundermatcha’s internal operations. Connect daily via high-fidelity
               online video calls, track psychological chemistry alignment, and turn discussions into accountable
               commitments.
             </p>
           </div>
 
-          {/* Key FounderMacha Pillars */}
+          {/* Key Foundermatcha Pillars */}
           <div className="mt-8 space-y-3.5">
             <div className="flex items-start gap-3">
               <div className="w-7 h-7 rounded-lg bg-[#78c452]/10 border border-[#78c452]/20 flex items-center justify-center text-[#78c452] shrink-0 mt-0.5">
@@ -197,7 +197,7 @@ export const AuthScreen: React.FC = () => {
 
         {/* Footer info */}
         <div className="pt-8 mt-8 border-t border-neutral-800 text-[11px] text-neutral-500 flex items-center justify-between font-mono">
-          <span>FounderMacha Internal Engine</span>
+          <span>Foundermatcha Internal Engine</span>
           <span>v2.8 Matcha Edition</span>
         </div>
       </div>
@@ -219,7 +219,7 @@ export const AuthScreen: React.FC = () => {
                   : 'text-neutral-400 hover:text-white'
               }`}
             >
-              Sign In to FounderMacha
+              Sign In to Foundermatcha
             </button>
             <button
               type="button"
@@ -240,7 +240,7 @@ export const AuthScreen: React.FC = () => {
           {/* Heading */}
           <div>
             <h2 className="text-xl font-bold text-white tracking-tight">
-              {mode === 'signin' ? 'Welcome back to FounderMacha' : 'Onboard your team into FounderMacha'}
+              {mode === 'signin' ? 'Welcome back to Foundermatcha' : 'Onboard your team into Foundermatcha'}
             </h2>
             <p className="text-xs text-neutral-400 mt-1">
               {mode === 'signin'
@@ -322,7 +322,7 @@ export const AuthScreen: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <span>Enter FounderMacha</span>
+                    <span>Enter Foundermatcha</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
@@ -345,7 +345,7 @@ export const AuthScreen: React.FC = () => {
                 className="w-full py-2.5 px-4 text-xs font-medium text-neutral-200 hover:text-white bg-neutral-900 hover:bg-neutral-800 border border-[#78c452]/40 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Sparkles className="w-4 h-4 text-[#78c452]" />
-                <span>Instant FounderMacha Access (Founder & CEO)</span>
+                <span>Instant Foundermatcha Access (Founder & CEO)</span>
               </button>
             </form>
           ) : (
@@ -379,7 +379,7 @@ export const AuthScreen: React.FC = () => {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="krishna@foundermacha.com"
+                      placeholder="krishna@foundermatcha.com"
                       required
                       className="w-full pl-9 pr-3 py-2 text-xs bg-neutral-900 border border-neutral-800 rounded-xl text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#78c452] transition-all"
                     />
@@ -415,7 +415,7 @@ export const AuthScreen: React.FC = () => {
                       type="text"
                       value={workspaceName}
                       onChange={(e) => setWorkspaceName(e.target.value)}
-                      placeholder="FounderMacha Core"
+                      placeholder="Foundermatcha Core"
                       required
                       className="w-full pl-9 pr-3 py-2 text-xs bg-neutral-900 border border-neutral-800 rounded-xl text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#78c452] transition-all"
                     />
@@ -478,7 +478,7 @@ export const AuthScreen: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <span>Join FounderMacha Workspace</span>
+                    <span>Join Foundermatcha Workspace</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}

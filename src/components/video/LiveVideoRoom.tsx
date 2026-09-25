@@ -127,7 +127,7 @@ export const LiveVideoRoom: React.FC = () => {
 
   const [newManualNote, setNewManualNote] = useState('');
 
-  // FounderMacha Team Participants
+  // Foundermatcha Team Participants
   const [participants, setParticipants] = useState<ParticipantState[]>([
     {
       id: 'local_user',
@@ -280,7 +280,7 @@ export const LiveVideoRoom: React.FC = () => {
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText('https://foundermacha.com/room/executive-huddle');
+    navigator.clipboard.writeText('https://foundermatcha.com/room/executive-huddle');
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   };
@@ -308,11 +308,11 @@ export const LiveVideoRoom: React.FC = () => {
     liveDecisions.forEach((d) => {
       createDecision({
         meetingId: 'meet-huddle-today',
-        meetingTitle: 'FounderMacha Daily Executive Standup',
+        meetingTitle: 'Foundermatcha Daily Executive Standup',
         text: d.text,
         date: 'Today',
         participants: participants.map((p) => p.name.replace(' (You)', '')),
-        context: 'Captured live during FounderMacha Daily Standup video session.',
+        context: 'Captured live during Foundermatcha Daily Standup video session.',
         category: 'Engineering',
         status: 'Active',
         confidence: d.confidence,
@@ -325,7 +325,7 @@ export const LiveVideoRoom: React.FC = () => {
       createTask({
         title: a.title,
         meetingId: 'meet-huddle-today',
-        meetingTitle: 'FounderMacha Daily Executive Standup',
+        meetingTitle: 'Foundermatcha Daily Executive Standup',
         ownerId: matchedMember?.id || currentUser.id,
         ownerName: a.owner,
         ownerRole: matchedMember?.role || 'Executive',
@@ -334,7 +334,7 @@ export const LiveVideoRoom: React.FC = () => {
         priority: 'High',
         status: 'Open',
         confidence: a.confidence,
-        context: 'Action extracted live by FounderMacha Huddle AI engine.',
+        context: 'Action extracted live by Foundermatcha Huddle AI engine.',
       });
     });
 
@@ -759,7 +759,7 @@ export const LiveVideoRoom: React.FC = () => {
             <div className="flex-1 p-4 overflow-y-auto space-y-4">
               <div>
                 <h4 className="text-xs font-bold uppercase tracking-wider text-[#78c452] mb-1">
-                  FounderMacha Huddle Protocol
+                  Foundermatcha Huddle Protocol
                 </h4>
                 <p className="text-xs text-neutral-400">
                   Daily syncs are structured around Founder & Engineering compatibility and shipping velocity:

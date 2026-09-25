@@ -59,7 +59,7 @@ export const OverviewScreen: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-[#78c452]/20 text-[#4b8b29] font-bold border border-[#78c452]/30 uppercase tracking-wider">
-              FounderMacha Executive OS
+              Foundermatcha Executive OS
             </span>
             <span className="text-xs text-neutral-400 font-mono">Sanctuary Mode Active</span>
           </div>
@@ -95,7 +95,7 @@ export const OverviewScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* Flagship: FounderMacha Everyday Video Huddle Card */}
+      {/* Flagship: Foundermatcha Everyday Video Huddle Card */}
       <div className="rounded-2xl p-6 sm:p-7 bg-gradient-to-r from-neutral-950 via-neutral-900 to-[#121c10] text-white shadow-xl border border-neutral-800 relative overflow-hidden">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-3 max-w-2xl">

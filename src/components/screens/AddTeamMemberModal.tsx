@@ -35,10 +35,10 @@ const DEPARTMENTS = [
 ];
 
 const PRESETS = [
-  { name: 'David Thorne', role: 'Lead Software Engineer', department: 'Engineering', email: 'david@foundermacha.com' },
-  { name: 'Elena Rostova', role: 'Tech Co-Founder & CTO', department: 'Leadership', email: 'elena@foundermacha.com' },
-  { name: 'Sarah Chen', role: 'Head of Product & Psychology', department: 'Product', email: 'sarah@foundermacha.com' },
-  { name: 'Marcus Vance', role: 'Growth & Operations Lead', department: 'Operations', email: 'marcus@foundermacha.com' },
+  { name: 'David Thorne', role: 'Lead Software Engineer', department: 'Engineering', email: 'david@foundermatcha.com' },
+  { name: 'Elena Rostova', role: 'Tech Co-Founder & CTO', department: 'Leadership', email: 'elena@foundermatcha.com' },
+  { name: 'Sarah Chen', role: 'Head of Product & Psychology', department: 'Product', email: 'sarah@foundermatcha.com' },
+  { name: 'Marcus Vance', role: 'Growth & Operations Lead', department: 'Operations', email: 'marcus@foundermatcha.com' },
 ];
 
 interface AddTeamMemberModalProps {
@@ -322,7 +322,7 @@ export const AddTeamMemberModal: React.FC<AddTeamMemberModalProps> = ({
               className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-neutral-950 bg-[#78c452] hover:bg-[#67b342] rounded-lg shadow-sm transition-all cursor-pointer"
             >
               <UserPlus className="w-3.5 h-3.5" />
-              <span>Add Member to FounderMacha</span>
+              <span>Add Member to Foundermatcha</span>
             </button>
           </div>
         </form>

@@ -131,7 +131,7 @@ export const Sidebar: React.FC = () => {
           <div className="flex items-center gap-2 truncate">
             <Building2 className="w-3.5 h-3.5 text-[#4b8b29] shrink-0" />
             <span className="truncate font-semibold text-neutral-900">
-              {workspaceProfile.name.includes('FounderMacha') ? workspaceProfile.name : `FounderMacha • ${workspaceProfile.name}`}
+              {workspaceProfile.name.includes('Foundermatcha') ? workspaceProfile.name : `Foundermatcha • ${workspaceProfile.name}`}
             </span>
           </div>
           <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#78c452]/15 text-[#4b8b29] font-bold">

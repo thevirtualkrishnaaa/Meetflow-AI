@@ -22,15 +22,29 @@ const ai = new GoogleGenAI({ apiKey });
 // Simple in-memory user registry for live multi-user authentication
 const usersDb = new Map<string, any>();
 
-// Seed FounderMacha executive account
-usersDb.set('krishna@foundermacha.com', {
+// Seed Foundermatcha executive accounts
+usersDb.set('krishna@foundermatcha.com', {
   id: 'usr_founder_krishna',
+  name: 'Krishna',
+  email: 'krishna@foundermatcha.com',
+  password: 'password123',
+  role: 'Founder & CEO',
+  department: 'Leadership',
+  workspaceName: 'Foundermatcha Core',
+  avatarColor: 'bg-[#78c452] text-neutral-950 font-bold',
+  initials: 'KF',
+  createdAt: new Date().toISOString(),
+});
+
+// Alias krishna@foundermacha.com as well
+usersDb.set('krishna@foundermacha.com', {
+  id: 'usr_founder_krishna_alias',
   name: 'Krishna',
   email: 'krishna@foundermacha.com',
   password: 'password123',
   role: 'Founder & CEO',
   department: 'Leadership',
-  workspaceName: 'FounderMacha Core',
+  workspaceName: 'Foundermatcha Core',
   avatarColor: 'bg-[#78c452] text-neutral-950 font-bold',
   initials: 'KF',
   createdAt: new Date().toISOString(),
@@ -44,7 +58,7 @@ usersDb.set('admin@meetingflow.ai', {
   password: 'password123',
   role: 'Founder & CEO',
   department: 'Leadership',
-  workspaceName: 'FounderMacha Core',
+  workspaceName: 'Foundermatcha Core',
   avatarColor: 'bg-[#78c452] text-neutral-950 font-bold',
   initials: 'KF',
   createdAt: new Date().toISOString(),

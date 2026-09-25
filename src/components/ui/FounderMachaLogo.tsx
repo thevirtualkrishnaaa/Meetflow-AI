@@ -41,7 +41,7 @@ export const FounderMachaLogo: React.FC<FounderMachaLogoProps> = ({
 
   return (
     <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
-      {/* FounderMacha Matcha Bowl / Whisk Symbol */}
+      {/* Foundermatcha Matcha Bowl / Whisk Symbol */}
       <div
         className="relative shrink-0 flex items-center justify-center rounded-xl bg-neutral-900 border border-neutral-800 shadow-xs group transition-transform duration-200"
         style={{
@@ -74,7 +74,7 @@ export const FounderMachaLogo: React.FC<FounderMachaLogoProps> = ({
               } ${textClassName}`}
               style={{ fontFamily: 'var(--font-sans)' }}
             >
-              Founder<span style={{ color: accentColor }}>Macha</span>
+              Founder<span style={{ color: accentColor }}>matcha</span>
             </span>
             <span
               className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded font-bold tracking-wider"
@@ -96,3 +96,5 @@ export const FounderMachaLogo: React.FC<FounderMachaLogoProps> = ({
     </div>
   );
 };
+
+export const FoundermatchaLogo = FounderMachaLogo;

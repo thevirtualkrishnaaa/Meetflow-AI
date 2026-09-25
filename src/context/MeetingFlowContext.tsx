@@ -157,14 +157,14 @@ export const MeetingFlowProvider: React.FC<{ children: React.ReactNode }> = ({ c
       };
     }
     return {
-      name: 'FounderMacha Core',
-      domain: 'foundermacha.com',
+      name: 'Foundermatcha Core',
+      domain: 'foundermatcha.com',
       createdAt: new Date().toISOString(),
     };
   });
 
   // 4. Workspace Data initialization (Per-user persistent store)
-  const getUserStorageKey = (userId: string) => `foundermacha_data_v3_${userId}`;
+  const getUserStorageKey = (userId: string) => `foundermatcha_data_v4_${userId}`;
 
   const loadUserData = (user: AuthUser | null) => {
     if (!user) {
@@ -201,8 +201,12 @@ export const MeetingFlowProvider: React.FC<{ children: React.ReactNode }> = ({ c
       completedTasks: 0,
     };
 
-    // If FounderMacha admin/founder account, seed initial starter meetings for instant exploration
-    if (user.email === 'admin@meetingflow.ai' || user.email === 'krishna@foundermacha.com') {
+    // If Foundermatcha admin/founder account, seed initial starter meetings for instant exploration
+    if (
+      user.email === 'admin@meetingflow.ai' ||
+      user.email === 'krishna@foundermatcha.com' ||
+      user.email === 'krishna@foundermacha.com'
+    ) {
       return {
         meetings: INITIAL_MEETINGS,
         actionItems: INITIAL_ACTION_ITEMS,
