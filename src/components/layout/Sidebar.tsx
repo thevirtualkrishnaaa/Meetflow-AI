@@ -24,7 +24,9 @@ export const Sidebar: React.FC = () => {
   const { currentScreen, setCurrentScreen, actionItems, currentUser, workspaceProfile, logout } =
     useMeetingFlow();
 
-  const overdueCount = actionItems.filter((a) => a.status === 'Overdue').length;
+  const dueTodayOrOverdueCount = actionItems.filter(
+    (a) => a.status !== 'Completed' && (a.status === 'Overdue' || a.dueDate.toLowerCase().includes('today'))
+  ).length;
 
   const navItems: Array<{
     id: AppScreen;
@@ -34,27 +36,41 @@ export const Sidebar: React.FC = () => {
     badgeColor?: string;
     pulseBadge?: boolean;
   }> = [
-    { id: 'overview', label: 'Executive Hub', icon: BarChart3 },
     {
       id: 'video_room',
-      label: 'Live Video Huddle',
+      label: 'Video Meeting',
       icon: Video,
-      badge: 'LIVE',
+      badge: 'MEET',
       badgeColor: 'bg-[#78c452]/20 text-[#4b8b29] border border-[#78c452]/30',
       pulseBadge: true,
     },
-    { id: 'meetings', label: 'Huddles & Syncs', icon: Calendar },
     {
       id: 'action_items',
-      label: 'Sprint Deliverables',
+      label: 'Tasks & Goals',
       icon: CheckSquare,
-      badge: overdueCount > 0 ? overdueCount : undefined,
-      badgeColor: 'text-rose-600 bg-rose-50',
+      badge: dueTodayOrOverdueCount > 0 ? dueTodayOrOverdueCount : undefined,
+      badgeColor: 'text-amber-700 bg-amber-50 border border-amber-200/50',
     },
-    { id: 'decisions', label: 'Executive Decisions', icon: Lightbulb },
-    { id: 'team', label: 'Founders & Engineers', icon: Users },
-    { id: 'reports', label: 'Chemistry & Velocity', icon: Layers },
-    { id: 'settings', label: 'Sanctuary Settings', icon: Settings },
+    {
+      id: 'reports',
+      label: 'Weekly Reports',
+      icon: BarChart3,
+    },
+    {
+      id: 'team',
+      label: 'Team & Roles',
+      icon: Users,
+    },
+    {
+      id: 'meetings',
+      label: 'Meeting Summaries',
+      icon: Calendar,
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: Settings,
+    },
   ];
 
   return (
@@ -64,7 +80,7 @@ export const Sidebar: React.FC = () => {
         <FounderMachaLogo size="sm" showText={true} subtext="Executive Huddle Suite" />
       </div>
 
-      {/* Quick Launch Everyday Huddle Button */}
+      {/* Quick Launch Google Meet Video Meeting */}
       <div className="p-3 pb-1">
         <button
           onClick={() => setCurrentScreen('video_room')}
@@ -72,7 +88,7 @@ export const Sidebar: React.FC = () => {
         >
           <div className="w-2 h-2 rounded-full bg-[#78c452] animate-ping" />
           <Video className="w-3.5 h-3.5 text-[#78c452]" />
-          <span>Start Daily Huddle</span>
+          <span>New Video Meeting</span>
         </button>
       </div>
 

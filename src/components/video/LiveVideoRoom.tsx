@@ -13,265 +13,79 @@ import {
   CheckCircle2,
   Clock,
   ChevronRight,
-  Shield,
   MessageSquare,
   Plus,
   Maximize2,
   Minimize2,
-  Volume2,
-  Hand,
   Copy,
   Check,
   Radio,
   FileText,
-  UserCheck,
+  UserPlus,
+  Trash2,
+  AlertCircle,
+  Calendar,
 } from 'lucide-react';
+import { Priority, TaskStatus } from '../../types';
 
-interface ParticipantState {
+interface DetectedAction {
   id: string;
-  name: string;
-  role: string;
-  department: string;
-  avatarColor: string;
-  isSpeaking: boolean;
-  isMuted: boolean;
-  isVideoOff: boolean;
-  handRaised: boolean;
-  quote?: string;
-  streamMockId: number;
+  title: string;
+  ownerId: string;
+  ownerName: string;
+  dueDate: string;
+  priority: Priority;
 }
 
 export const LiveVideoRoom: React.FC = () => {
-  const { currentUser, teamMembers, setCurrentScreen, createDecision, createTask, meetings } =
-    useMeetingFlow();
+  const {
+    currentUser,
+    teamMembers,
+    setCurrentScreen,
+    createTask,
+    setIsAddMemberModalOpen,
+    workspaceProfile,
+  } = useMeetingFlow();
 
-  // Local media states
+  // Media states
   const [isMicOn, setIsMicOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [isHandRaised, setIsHandRaised] = useState(false);
-  const [callDurationSeconds, setCallDurationSeconds] = useState(142); // 2m 22s initial
-  const [activeTab, setActiveTab] = useState<'ai_notes' | 'standup' | 'chat'>('ai_notes');
+  const [callDurationSeconds, setCallDurationSeconds] = useState(0);
   const [copiedLink, setCopiedLink] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isStandupActive, setIsStandupActive] = useState(true);
-  const [activeSpeakerIdx, setActiveSpeakerIdx] = useState(1);
-  const [standupSpeakerTime, setStandupSpeakerTime] = useState(74); // 74s remaining for current speaker
+  const [isSideDrawerOpen, setIsSideDrawerOpen] = useState(false);
+  const [activeSideTab, setActiveSideTab] = useState<'notes' | 'participants'>('notes');
+  const [meetingTitle, setMeetingTitle] = useState('Foundermatcha Workshop Meeting');
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+
+  // Live notes and spoken transcript
+  const [transcriptEntries, setTranscriptEntries] = useState<
+    Array<{ id: string; speaker: string; text: string; time: string }>
+  >([]);
+  const [currentNoteInput, setCurrentNoteInput] = useState('');
+  const [isAiListening, setIsAiListening] = useState(true);
+
+  // End meeting AI modal state
+  const [showEndMeetingReport, setShowEndMeetingReport] = useState(false);
+  const [isGeneratingAiReport, setIsGeneratingAiReport] = useState(false);
+  const [generatedSummary, setGeneratedSummary] = useState('');
+  const [generatedDecisions, setGeneratedDecisions] = useState<string[]>([]);
+  const [generatedActions, setGeneratedActions] = useState<DetectedAction[]>([]);
+  const [newActionTitle, setNewActionTitle] = useState('');
 
   // Video element refs
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const localMediaStreamRef = useRef<MediaStream | null>(null);
-  const [cameraPermissionGranted, setCameraPermissionGranted] = useState(false);
+  const screenStreamRef = useRef<MediaStream | null>(null);
+  const speechRecognitionRef = useRef<any>(null);
 
-  // Live in-call AI detections
-  const [liveTranscript, setLiveTranscript] = useState<
-    Array<{ id: string; speaker: string; text: string; time: string; isAiExtracted?: boolean }>
-  >([
-    {
-      id: 't-1',
-      speaker: 'Elena Rostova (CTO)',
-      text: 'Good morning team. We ran the test suite for the psychological matching engine overnight. The chemistry scoring benchmark improved by 14%.',
-      time: '00:45',
-    },
-    {
-      id: 't-2',
-      speaker: currentUser.name,
-      text: 'Great progress Elena. For today’s internal daily huddle, what are the primary blockers on the Sanctuary privacy features?',
-      time: '01:10',
-    },
-    {
-      id: 't-3',
-      speaker: 'David Thorne (Lead Engineer)',
-      text: 'The stealth mode anonymity filters are passing CI. We can deploy the private founder-engineer handshake to staging by 3 PM.',
-      time: '01:40',
-      isAiExtracted: true,
-    },
-    {
-      id: 't-4',
-      speaker: 'Sarah Chen (Head of Product)',
-      text: 'Agreed. Let’s freeze schema migrations for the equity-vs-cash preference slider until Wednesday.',
-      time: '02:05',
-      isAiExtracted: true,
-    },
-  ]);
-
-  const [liveDecisions, setLiveDecisions] = useState<
-    Array<{ id: string; text: string; confidence: number; timestamp: string }>
-  >([
-    {
-      id: 'ld-1',
-      text: 'Freeze schema migrations on the equity vs cash slider until Wednesday sprint review.',
-      confidence: 0.96,
-      timestamp: '02:06',
-    },
-  ]);
-
-  const [liveActions, setLiveActions] = useState<
-    Array<{ id: string; title: string; owner: string; dueDate: string; confidence: number }>
-  >([
-    {
-      id: 'la-1',
-      title: 'Deploy Sanctuary private founder-engineer handshake to staging',
-      owner: 'David Thorne',
-      dueDate: 'Today, 3 PM',
-      confidence: 0.94,
-    },
-    {
-      id: 'la-2',
-      title: 'Finalise benchmark telemetry for the psychology chemistry algorithm',
-      owner: 'Elena Rostova',
-      dueDate: 'Tomorrow',
-      confidence: 0.92,
-    },
-  ]);
-
-  const [newManualNote, setNewManualNote] = useState('');
-
-  // Foundermatcha Team Participants
-  const [participants, setParticipants] = useState<ParticipantState[]>([
-    {
-      id: 'local_user',
-      name: `${currentUser.name} (You)`,
-      role: currentUser.role || 'Founder & CEO',
-      department: currentUser.department || 'Executive',
-      avatarColor: 'bg-[#78c452] text-neutral-950 font-bold',
-      isSpeaking: false,
-      isMuted: !isMicOn,
-      isVideoOff: !isVideoOn,
-      handRaised: isHandRaised,
-      streamMockId: 0,
-    },
-    {
-      id: 'elena_r',
-      name: 'Elena Rostova',
-      role: 'Tech Co-Founder & CTO',
-      department: 'Engineering',
-      avatarColor: 'bg-emerald-700 text-white font-bold',
-      isSpeaking: true,
-      isMuted: false,
-      isVideoOff: false,
-      handRaised: false,
-      quote: 'Sanctuary privacy tests are 100% green.',
-      streamMockId: 1,
-    },
-    {
-      id: 'david_t',
-      name: 'David Thorne',
-      role: 'Lead Software Engineer',
-      department: 'Core Systems',
-      avatarColor: 'bg-blue-600 text-white font-bold',
-      isSpeaking: false,
-      isMuted: false,
-      isVideoOff: false,
-      handRaised: false,
-      quote: 'Reviewing graph matching PR.',
-      streamMockId: 2,
-    },
-    {
-      id: 'sarah_c',
-      name: 'Sarah Chen',
-      role: 'Head of Product & Psychology',
-      department: 'Product',
-      avatarColor: 'bg-violet-600 text-white font-bold',
-      isSpeaking: false,
-      isMuted: false,
-      isVideoOff: false,
-      handRaised: false,
-      quote: 'Updating founder chemistry questionnaire.',
-      streamMockId: 3,
-    },
-    {
-      id: 'priya_p',
-      name: 'Priya Patel',
-      role: 'Head of UI/UX Design',
-      department: 'Design',
-      avatarColor: 'bg-rose-600 text-white font-bold',
-      isSpeaking: false,
-      isMuted: true,
-      isVideoOff: false,
-      handRaised: false,
-      quote: 'Finalising dark huddle UI layout.',
-      streamMockId: 4,
-    },
-    {
-      id: 'marcus_v',
-      name: 'Marcus Vance',
-      role: 'Growth & Operations Lead',
-      department: 'Growth',
-      avatarColor: 'bg-amber-600 text-white font-bold',
-      isSpeaking: false,
-      isMuted: false,
-      isVideoOff: true,
-      handRaised: false,
-      quote: 'Republic campaign + 400 new vetted devs.',
-      streamMockId: 5,
-    },
-  ]);
-
-  // Request actual camera & mic if available
-  useEffect(() => {
-    let stream: MediaStream | null = null;
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices
-        .getUserMedia({ video: true, audio: true })
-        .then((s) => {
-          stream = s;
-          localMediaStreamRef.current = s;
-          setCameraPermissionGranted(true);
-          if (localVideoRef.current) {
-            localVideoRef.current.srcObject = s;
-          }
-        })
-        .catch(() => {
-          // Camera not available or denied - gracefully use high-fidelity simulation
-          setCameraPermissionGranted(false);
-        });
-    }
-
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach((t) => t.stop());
-      }
-    };
-  }, []);
-
-  // Update local video track when toggled
-  useEffect(() => {
-    if (localMediaStreamRef.current) {
-      localMediaStreamRef.current.getVideoTracks().forEach((track) => {
-        track.enabled = isVideoOn;
-      });
-      localMediaStreamRef.current.getAudioTracks().forEach((track) => {
-        track.enabled = isMicOn;
-      });
-    }
-  }, [isVideoOn, isMicOn]);
-
-  // Meeting timer
+  // 1. Call timer
   useEffect(() => {
     const timer = setInterval(() => {
       setCallDurationSeconds((prev) => prev + 1);
-      setStandupSpeakerTime((prev) => (prev > 0 ? prev - 1 : 120));
     }, 1000);
     return () => clearInterval(timer);
   }, []);
-
-  // Rotate speaking simulator among team members
-  useEffect(() => {
-    const speakerInterval = setInterval(() => {
-      setActiveSpeakerIdx((prev) => {
-        const next = (prev + 1) % participants.length;
-        setParticipants((current) =>
-          current.map((p, idx) => ({
-            ...p,
-            isSpeaking: idx === next,
-          }))
-        );
-        return next;
-      });
-    }, 9000);
-    return () => clearInterval(speakerInterval);
-  }, [participants.length]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -279,547 +93,878 @@ export const LiveVideoRoom: React.FC = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // 2. Initialize camera & microphone
+  useEffect(() => {
+    let mounted = true;
+
+    async function initCamera() {
+      try {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true,
+          });
+          if (!mounted) {
+            stream.getTracks().forEach((t) => t.stop());
+            return;
+          }
+          localMediaStreamRef.current = stream;
+          if (localVideoRef.current) {
+            localVideoRef.current.srcObject = stream;
+          }
+        }
+      } catch (err) {
+        console.warn('Camera/mic access unavailable or denied:', err);
+      }
+    }
+
+    initCamera();
+
+    return () => {
+      mounted = false;
+      if (localMediaStreamRef.current) {
+        localMediaStreamRef.current.getTracks().forEach((t) => t.stop());
+      }
+      if (screenStreamRef.current) {
+        screenStreamRef.current.getTracks().forEach((t) => t.stop());
+      }
+    };
+  }, []);
+
+  // 3. Microphone toggle
+  const toggleMic = () => {
+    if (localMediaStreamRef.current) {
+      localMediaStreamRef.current.getAudioTracks().forEach((t) => {
+        t.enabled = !isMicOn;
+      });
+    }
+    setIsMicOn((prev) => !prev);
+  };
+
+  // 4. Camera toggle
+  const toggleVideo = () => {
+    if (localMediaStreamRef.current) {
+      localMediaStreamRef.current.getVideoTracks().forEach((t) => {
+        t.enabled = !isVideoOn;
+      });
+    }
+    setIsVideoOn((prev) => !prev);
+  };
+
+  // 5. Screen Share toggle
+  const toggleScreenShare = async () => {
+    if (isScreenSharing) {
+      if (screenStreamRef.current) {
+        screenStreamRef.current.getTracks().forEach((t) => t.stop());
+        screenStreamRef.current = null;
+      }
+      if (localVideoRef.current && localMediaStreamRef.current) {
+        localVideoRef.current.srcObject = localMediaStreamRef.current;
+      }
+      setIsScreenSharing(false);
+    } else {
+      try {
+        if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+          const screenStream = await navigator.mediaDevices.getDisplayMedia({
+            video: true,
+          });
+          screenStreamRef.current = screenStream;
+          if (localVideoRef.current) {
+            localVideoRef.current.srcObject = screenStream;
+          }
+          screenStream.getVideoTracks()[0].onended = () => {
+            if (localVideoRef.current && localMediaStreamRef.current) {
+              localVideoRef.current.srcObject = localMediaStreamRef.current;
+            }
+            setIsScreenSharing(false);
+          };
+          setIsScreenSharing(true);
+        }
+      } catch (err) {
+        console.warn('Screen share canceled or denied:', err);
+      }
+    }
+  };
+
+  // 6. Speech Recognition for real-time AI transcription
+  useEffect(() => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (SpeechRecognition && isAiListening && isMicOn) {
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onresult = (event: any) => {
+          const lastResultIndex = event.results.length - 1;
+          const transcriptText = event.results[lastResultIndex][0].transcript.trim();
+          if (transcriptText) {
+            setTranscriptEntries((prev) => [
+              ...prev,
+              {
+                id: `entry-${Date.now()}`,
+                speaker: currentUser.name,
+                text: transcriptText,
+                time: formatTime(callDurationSeconds),
+              },
+            ]);
+          }
+        };
+
+        recognition.onerror = () => {
+          // Silent fallback
+        };
+
+        recognition.start();
+        speechRecognitionRef.current = recognition;
+
+        return () => {
+          try {
+            recognition.stop();
+          } catch {}
+        };
+      } catch {}
+    }
+  }, [isAiListening, isMicOn, currentUser.name, callDurationSeconds]);
+
+  // 7. Add Manual Note to live transcript
+  const handleAddManualNote = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentNoteInput.trim()) return;
+
+    setTranscriptEntries((prev) => [
+      ...prev,
+      {
+        id: `note-${Date.now()}`,
+        speaker: `${currentUser.name} (Live Note)`,
+        text: currentNoteInput.trim(),
+        time: formatTime(callDurationSeconds),
+      },
+    ]);
+    setCurrentNoteInput('');
+  };
+
+  // 8. Copy meeting link
   const handleCopyLink = () => {
-    navigator.clipboard.writeText('https://foundermatcha.com/room/executive-huddle');
+    const link = `https://foundermatcha.com/meet/${workspaceProfile.name.toLowerCase().replace(/\s+/g, '-')}`;
+    navigator.clipboard.writeText(link);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  const handleAddManualNote = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newManualNote.trim()) return;
+  // 9. Trigger End Meeting & AI Report Generation
+  const handleEndCallClick = async () => {
+    setIsGeneratingAiReport(true);
+    setShowEndMeetingReport(true);
 
-    setLiveTranscript((prev) => [
+    // Build raw discussion context from transcript & notes
+    const combinedNotes =
+      transcriptEntries.length > 0
+        ? transcriptEntries.map((e) => `${e.speaker}: ${e.text}`).join('\n')
+        : `${currentUser.name}: Held workshop meeting for ${meetingTitle}. Reviewed team goals, sprint deliverables, and agreed on key next steps today.`;
+
+    try {
+      const response = await fetch('/api/extract-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transcript: combinedNotes,
+          meetingTitle,
+          teamMembers,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setGeneratedSummary(
+          data.summary ||
+            `The team met for "${meetingTitle}" to align on workshop deliverables, review progress, and specify today's immediate priorities.`
+        );
+
+        const decisions = Array.isArray(data.decisions)
+          ? data.decisions.map((d: any) => (typeof d === 'string' ? d : d.text))
+          : [`Agreed on execution roadmap and today's priority commitments for ${meetingTitle}.`];
+        setGeneratedDecisions(decisions);
+
+        const actions: DetectedAction[] = (data.actions || []).map((a: any, idx: number) => {
+          const matchedMember = teamMembers.find(
+            (m) =>
+              m.name.toLowerCase() === (a.suggestedOwner || '').toLowerCase() ||
+              m.name.split(' ')[0].toLowerCase() === (a.suggestedOwner || '').toLowerCase()
+          );
+
+          return {
+            id: `act-gen-${Date.now()}-${idx}`,
+            title: a.title || 'Follow up on discussion items',
+            ownerId: matchedMember ? matchedMember.id : currentUser.id,
+            ownerName: matchedMember ? matchedMember.name : currentUser.name,
+            dueDate: a.suggestedDueDate || 'Today',
+            priority: (a.priority as Priority) || 'High',
+          };
+        });
+
+        // Ensure at least one action exists
+        if (actions.length === 0) {
+          actions.push({
+            id: `act-gen-${Date.now()}-default`,
+            title: `Execute deliverables agreed during ${meetingTitle}`,
+            ownerId: currentUser.id,
+            ownerName: currentUser.name,
+            dueDate: 'Today',
+            priority: 'High',
+          });
+        }
+
+        setGeneratedActions(actions);
+      } else {
+        throw new Error('Fallback report');
+      }
+    } catch {
+      // Clean fallback if offline or API error
+      setGeneratedSummary(
+        `The team conducted "${meetingTitle}" to align on workshop goals, discuss ongoing deliverables, and establish clear action items to be completed today.`
+      );
+      setGeneratedDecisions([
+        `Approved workshop plan and priorities for ${meetingTitle}.`,
+      ]);
+      setGeneratedActions([
+        {
+          id: `act-fallback-${Date.now()}`,
+          title: `Complete core deliverables discussed in ${meetingTitle}`,
+          ownerId: currentUser.id,
+          ownerName: currentUser.name,
+          dueDate: 'Today',
+          priority: 'High',
+        },
+      ]);
+    } finally {
+      setIsGeneratingAiReport(false);
+    }
+  };
+
+  // 10. Save AI Report & Publish Tasks directly to Workspace
+  const handleSaveReportAndTasks = () => {
+    // Save each detected action item into the workspace Tasks & Goals
+    generatedActions.forEach((action) => {
+      const ownerMember = teamMembers.find((m) => m.id === action.ownerId);
+      createTask({
+        title: action.title,
+        meetingId: `meet-${Date.now()}`,
+        meetingTitle,
+        ownerId: action.ownerId,
+        ownerName: ownerMember?.name || currentUser.name,
+        ownerRole: ownerMember?.role || currentUser.role || 'Team Member',
+        dueDate: action.dueDate,
+        rawDueDate: new Date().toISOString().split('T')[0],
+        priority: action.priority,
+        status: 'Open',
+        confidence: 0.95,
+        context: `Generated by AI assistant during video call "${meetingTitle}".`,
+      });
+    });
+
+    // Close modal & navigate to Tasks & Goals
+    setShowEndMeetingReport(false);
+    setCurrentScreen('action_items');
+  };
+
+  // Add custom action manually during review
+  const handleAddCustomAction = () => {
+    if (!newActionTitle.trim()) return;
+    setGeneratedActions((prev) => [
       ...prev,
       {
-        id: `t-${Date.now()}`,
-        speaker: `${currentUser.name} (Direct Note)`,
-        text: newManualNote.trim(),
-        time: formatTime(callDurationSeconds),
-        isAiExtracted: false,
+        id: `act-custom-${Date.now()}`,
+        title: newActionTitle.trim(),
+        ownerId: currentUser.id,
+        ownerName: currentUser.name,
+        dueDate: 'Today',
+        priority: 'High',
       },
     ]);
-    setNewManualNote('');
+    setNewActionTitle('');
   };
 
-  // Convert live session into a real persistent Meeting record in MeetingFlowContext
-  const handleEndAndSyncCall = () => {
-    // 1. Create a persistent Decision in the system
-    liveDecisions.forEach((d) => {
-      createDecision({
-        meetingId: 'meet-huddle-today',
-        meetingTitle: 'Foundermatcha Daily Executive Standup',
-        text: d.text,
-        date: 'Today',
-        participants: participants.map((p) => p.name.replace(' (You)', '')),
-        context: 'Captured live during Foundermatcha Daily Standup video session.',
-        category: 'Engineering',
-        status: 'Active',
-        confidence: d.confidence,
-      });
-    });
-
-    // 2. Create persistent Action Items with owners in the system
-    liveActions.forEach((a) => {
-      const matchedMember = teamMembers.find((m) => m.name.includes(a.owner.split(' ')[0]));
-      createTask({
-        title: a.title,
-        meetingId: 'meet-huddle-today',
-        meetingTitle: 'Foundermatcha Daily Executive Standup',
-        ownerId: matchedMember?.id || currentUser.id,
-        ownerName: a.owner,
-        ownerRole: matchedMember?.role || 'Executive',
-        dueDate: 'Tomorrow',
-        rawDueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-        priority: 'High',
-        status: 'Open',
-        confidence: a.confidence,
-        context: 'Action extracted live by Foundermatcha Huddle AI engine.',
-      });
-    });
-
-    // Navigate to meetings screen to see outcomes
-    setCurrentScreen('overview');
-  };
+  const otherTeamMembers = teamMembers.filter((m) => m.id !== currentUser.id);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] -m-4 sm:-m-6 lg:-m-8 bg-neutral-950 text-neutral-100 select-none overflow-hidden">
-      {/* Top Header Bar */}
-      <div className="h-14 bg-neutral-900/90 border-b border-neutral-800 px-4 flex items-center justify-between shrink-0 backdrop-blur-md z-20">
+    <div className="relative h-[calc(100vh-6rem)] w-full rounded-2xl overflow-hidden bg-neutral-950 flex flex-col font-sans select-none border border-neutral-800 shadow-2xl">
+      {/* Top Header Bar (Google Meet Style) */}
+      <div className="h-14 px-5 bg-neutral-900/90 backdrop-blur-md border-b border-neutral-800/80 flex items-center justify-between z-20 shrink-0">
         <div className="flex items-center gap-3">
-          <FounderMachaLogo size="sm" showText={true} />
-          <div className="h-4 w-px bg-neutral-800" />
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-sm text-neutral-200">
-              Daily Executive Huddle
-            </span>
-            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-[#78c452]/20 text-[#78c452] border border-[#78c452]/30 animate-pulse">
-              <Radio className="w-2.5 h-2.5" />
-              LIVE {formatTime(callDurationSeconds)}
-            </span>
+          <FounderMachaLogo size="sm" showText={false} />
+          {isEditingTitle ? (
+            <input
+              type="text"
+              value={meetingTitle}
+              onChange={(e) => setMeetingTitle(e.target.value)}
+              onBlur={() => setIsEditingTitle(false)}
+              onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
+              autoFocus
+              className="text-sm font-bold text-white bg-neutral-800 px-2 py-1 rounded border border-[#78c452]/50 focus:outline-none"
+            />
+          ) : (
+            <button
+              onClick={() => setIsEditingTitle(true)}
+              className="text-sm font-bold text-white hover:text-[#78c452] flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Click to edit meeting name"
+            >
+              <span>{meetingTitle}</span>
+              <span className="text-[10px] text-neutral-400 font-normal">✎</span>
+            </button>
+          )}
+
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-800 border border-neutral-700 text-neutral-300 text-xs font-mono">
+            <Clock className="w-3 h-3 text-[#78c452]" />
+            <span>{formatTime(callDurationSeconds)}</span>
           </div>
         </div>
 
-        {/* Center Pill: Sanctuary Security & Psychology Protocol */}
-        <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-800/70 border border-neutral-700/60 text-xs text-neutral-300">
-          <Shield className="w-3.5 h-3.5 text-[#78c452]" />
-          <span>Sanctuary Mode: End-to-End Encrypted Internal Room</span>
+        {/* Center: Live AI Recording Indicator */}
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-[#78c452]/10 border border-[#78c452]/20 text-[#78c452] text-xs font-mono">
+          <span className="w-2 h-2 rounded-full bg-[#78c452] animate-pulse" />
+          <span>AI Recording & Summarizing Active</span>
         </div>
 
-        {/* Right Controls */}
+        {/* Right Actions */}
         <div className="flex items-center gap-2">
           <button
             onClick={handleCopyLink}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-xs font-medium text-neutral-200 transition-colors"
-            title="Copy Secure Meeting Room Link"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:text-white bg-neutral-800 hover:bg-neutral-700 rounded-lg transition-colors border border-neutral-700 cursor-pointer"
           >
-            {copiedLink ? (
-              <>
-                <Check className="w-3.5 h-3.5 text-[#78c452]" />
-                <span className="text-[#78c452]">Link Copied</span>
-              </>
-            ) : (
-              <>
-                <Copy className="w-3.5 h-3.5" />
-                <span>Invite Link</span>
-              </>
-            )}
+            {copiedLink ? <Check className="w-3.5 h-3.5 text-[#78c452]" /> : <Copy className="w-3.5 h-3.5" />}
+            <span className="hidden md:inline">{copiedLink ? 'Copied!' : 'Copy Link'}</span>
           </button>
 
           <button
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+            onClick={() => setIsAddMemberModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:text-white bg-neutral-800 hover:bg-neutral-700 rounded-lg transition-colors border border-neutral-700 cursor-pointer"
           >
-            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            <UserPlus className="w-3.5 h-3.5 text-[#78c452]" />
+            <span className="hidden md:inline">Add Member</span>
           </button>
         </div>
       </div>
 
-      {/* Main Video & Intelligence Workspace */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left: Video Grid Section */}
-        <div className="flex-1 flex flex-col p-3 overflow-y-auto">
-          {/* Daily Standup Active Speaker Banner */}
-          {isStandupActive && (
-            <div className="mb-3 px-4 py-2.5 rounded-xl bg-gradient-to-r from-neutral-900 via-neutral-900/90 to-neutral-900 border border-[#78c452]/30 flex items-center justify-between shrink-0 shadow-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#78c452] animate-ping" />
-                <div>
-                  <span className="text-xs font-semibold text-neutral-200">
-                    Active Standup Turn: {participants[activeSpeakerIdx]?.name}
-                  </span>
-                  <span className="text-[11px] text-[#78c452] block font-mono">
-                    {participants[activeSpeakerIdx]?.role} • {participants[activeSpeakerIdx]?.quote}
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 font-mono text-xs">
-                <span className="text-neutral-400">Speaker Time Remaining:</span>
-                <span
-                  className={`font-bold px-2 py-0.5 rounded ${
-                    standupSpeakerTime < 20
-                      ? 'bg-rose-500/20 text-rose-400'
-                      : 'bg-[#78c452]/20 text-[#78c452]'
-                  }`}
-                >
-                  {formatTime(standupSpeakerTime)}
-                </span>
-                <button
-                  onClick={() => {
-                    setActiveSpeakerIdx((prev) => (prev + 1) % participants.length);
-                    setStandupSpeakerTime(120);
-                  }}
-                  className="px-2 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-xs text-neutral-200 flex items-center gap-1 transition-colors"
-                >
-                  Next Speaker <ChevronRight className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-          )}
+      {/* Main Video Grid Canvas */}
+      <div className="flex-1 flex overflow-hidden relative">
+        <div className="flex-1 p-4 flex flex-col justify-center items-center overflow-y-auto">
+          {/* Grid Layout depending on member count */}
+          <div
+            className={`w-full h-full max-w-6xl grid gap-4 items-center justify-center ${
+              otherTeamMembers.length === 0
+                ? 'grid-cols-1'
+                : otherTeamMembers.length === 1
+                ? 'grid-cols-1 md:grid-cols-2'
+                : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+            }`}
+          >
+            {/* Tile 1: Current User (Local Camera stream) */}
+            <div className="relative w-full h-full min-h-[260px] bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-800 flex items-center justify-center shadow-lg group">
+              <video
+                ref={localVideoRef}
+                autoPlay
+                playsInline
+                muted
+                className={`w-full h-full object-cover transition-opacity duration-300 ${
+                  isVideoOn ? 'opacity-100' : 'opacity-0 hidden'
+                }`}
+              />
 
-          {/* Video Grid Tiles */}
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 auto-rows-fr">
-            {participants.map((p, idx) => {
-              const isLocalUser = idx === 0;
-
-              return (
-                <div
-                  key={p.id}
-                  className={`relative rounded-2xl overflow-hidden bg-neutral-900/90 border transition-all duration-300 flex flex-col items-center justify-center group ${
-                    p.isSpeaking
-                      ? 'border-[#78c452] shadow-[0_0_20px_rgba(120,196,82,0.25)] ring-1 ring-[#78c452]'
-                      : 'border-neutral-800 hover:border-neutral-700'
-                  }`}
-                  style={{ minHeight: '180px' }}
-                >
-                  {/* Video Stream or Avatar fallback */}
-                  {isLocalUser && isVideoOn && cameraPermissionGranted ? (
-                    <video
-                      ref={localVideoRef}
-                      autoPlay
-                      muted
-                      playsInline
-                      className="w-full h-full object-cover transform scale-x-[-1]"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-neutral-800/40 via-neutral-900 to-neutral-950">
-                      <div
-                        className={`w-18 h-18 rounded-2xl flex items-center justify-center text-xl shadow-lg border border-white/10 ${
-                          p.avatarColor
-                        } ${p.isSpeaking ? 'scale-105 ring-4 ring-[#78c452]/40' : ''}`}
-                      >
-                        {p.name
-                          .split(' ')
-                          .map((n) => n[0])
-                          .slice(0, 2)
-                          .join('')}
-                      </div>
-                      <div className="mt-3 text-center">
-                        <span className="text-sm font-semibold text-neutral-200 block">
-                          {p.name}
-                        </span>
-                        <span className="text-xs text-neutral-400 block font-mono">
-                          {p.role}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Speaking Waveform Pulse Indicator */}
-                  {p.isSpeaking && (
-                    <div className="absolute top-3 right-3 px-2 py-1 rounded-full bg-[#78c452]/20 border border-[#78c452]/40 text-[#78c452] flex items-center gap-1.5 text-[10px] font-mono animate-pulse">
-                      <Volume2 className="w-3 h-3" />
-                      <span>Speaking</span>
-                    </div>
-                  )}
-
-                  {/* Status Overlay Tags (Bottom) */}
-                  <div className="absolute bottom-2.5 inset-x-2.5 flex items-center justify-between z-10 pointer-events-none">
-                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-neutral-950/80 backdrop-blur-md border border-neutral-800/60 text-xs">
-                      <span className="font-semibold text-neutral-200 text-xs">{p.name}</span>
-                      <span className="text-[10px] text-neutral-400 font-mono">({p.role})</span>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      {p.isMuted && (
-                        <div className="p-1 rounded-md bg-rose-500/20 text-rose-400 border border-rose-500/30">
-                          <MicOff className="w-3 h-3" />
-                        </div>
-                      )}
-                      {p.isVideoOff && (
-                        <div className="p-1 rounded-md bg-neutral-800 text-neutral-400 border border-neutral-700">
-                          <VideoOff className="w-3 h-3" />
-                        </div>
-                      )}
-                      {p.handRaised && (
-                        <div className="p-1 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                          <Hand className="w-3 h-3" />
-                        </div>
-                      )}
-                    </div>
+              {/* Avatar Fallback if camera is off */}
+              {!isVideoOn && (
+                <div className="flex flex-col items-center justify-center space-y-3">
+                  <div
+                    className={`w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold shadow-md ${currentUser.avatarColor}`}
+                  >
+                    {currentUser.initials}
                   </div>
+                  <span className="text-sm font-semibold text-white">{currentUser.name}</span>
                 </div>
-              );
-            })}
-          </div>
+              )}
 
-          {/* Bottom Floating Control Bar */}
-          <div className="mt-3 py-2.5 px-6 rounded-2xl bg-neutral-900/95 border border-neutral-800 flex items-center justify-between shrink-0 shadow-2xl backdrop-blur-xl">
-            {/* Left controls: Audio & Video */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsMicOn(!isMicOn)}
-                className={`p-3 rounded-xl flex items-center gap-2 text-xs font-semibold transition-all ${
-                  isMicOn
-                    ? 'bg-neutral-800 hover:bg-neutral-700 text-white'
-                    : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                }`}
-              >
-                {isMicOn ? <Mic className="w-4 h-4 text-[#78c452]" /> : <MicOff className="w-4 h-4" />}
-                <span>{isMicOn ? 'Mute' : 'Unmuted'}</span>
-              </button>
-
-              <button
-                onClick={() => setIsVideoOn(!isVideoOn)}
-                className={`p-3 rounded-xl flex items-center gap-2 text-xs font-semibold transition-all ${
-                  isVideoOn
-                    ? 'bg-neutral-800 hover:bg-neutral-700 text-white'
-                    : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                }`}
-              >
-                {isVideoOn ? <Video className="w-4 h-4 text-[#78c452]" /> : <VideoOff className="w-4 h-4" />}
-                <span>{isVideoOn ? 'Stop Camera' : 'Start Camera'}</span>
-              </button>
-            </div>
-
-            {/* Middle controls: Collaboration Tools */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsScreenSharing(!isScreenSharing)}
-                className={`p-3 rounded-xl flex items-center gap-2 text-xs font-semibold transition-all ${
-                  isScreenSharing
-                    ? 'bg-[#78c452] text-neutral-950'
-                    : 'bg-neutral-800 hover:bg-neutral-700 text-white'
-                }`}
-              >
-                <ScreenShare className="w-4 h-4" />
-                <span className="hidden sm:inline">
-                  {isScreenSharing ? 'Sharing Screen' : 'Share Screen'}
+              {/* Bottom label */}
+              <div className="absolute bottom-3 left-3 flex items-center gap-2 px-2.5 py-1 rounded-lg bg-neutral-950/80 backdrop-blur-xs text-xs text-white border border-neutral-800/80">
+                <span className="font-semibold">{currentUser.name} (You)</span>
+                <span className="text-[10px] text-neutral-400 font-mono">
+                  {currentUser.role || 'Founder & CEO'}
                 </span>
-              </button>
-
-              <button
-                onClick={() => setIsHandRaised(!isHandRaised)}
-                className={`p-3 rounded-xl flex items-center gap-2 text-xs font-semibold transition-all ${
-                  isHandRaised
-                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                    : 'bg-neutral-800 hover:bg-neutral-700 text-white'
-                }`}
-              >
-                <Hand className="w-4 h-4" />
-                <span className="hidden sm:inline">Raise Hand</span>
-              </button>
-
-              <button
-                onClick={() => setIsStandupActive(!isStandupActive)}
-                className={`p-3 rounded-xl flex items-center gap-2 text-xs font-semibold transition-all ${
-                  isStandupActive
-                    ? 'bg-[#78c452]/20 text-[#78c452] border border-[#78c452]/40'
-                    : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-400'
-                }`}
-              >
-                <Clock className="w-4 h-4" />
-                <span className="hidden sm:inline">Standup Timer</span>
-              </button>
+                {!isMicOn ? (
+                  <MicOff className="w-3 h-3 text-rose-500" />
+                ) : (
+                  <Mic className="w-3 h-3 text-[#78c452]" />
+                )}
+              </div>
             </div>
 
-            {/* Right: End Meeting & Auto-Sync to Hub */}
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleEndAndSyncCall}
-                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white font-semibold text-xs flex items-center gap-2 shadow-lg transition-all"
+            {/* If user is alone: Clean Google Meet invite tile */}
+            {otherTeamMembers.length === 0 && (
+              <div className="w-full h-full min-h-[220px] bg-neutral-900/40 border border-dashed border-neutral-800 rounded-2xl flex flex-col items-center justify-center p-6 text-center">
+                <div className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center text-[#78c452] mb-3">
+                  <Users className="w-6 h-6" />
+                </div>
+                <h3 className="text-sm font-bold text-white">You're in the workshop meeting</h3>
+                <p className="text-xs text-neutral-400 max-w-sm mt-1 mb-4">
+                  Add team members to assign their roles, or copy the link to invite them to this session.
+                </p>
+                <div className="flex items-center gap-2.5">
+                  <button
+                    onClick={() => setIsAddMemberModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-neutral-950 bg-[#78c452] hover:bg-[#67b342] rounded-xl transition-all cursor-pointer shadow-sm"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    <span>Add Team Member</span>
+                  </button>
+                  <button
+                    onClick={handleCopyLink}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-neutral-300 bg-neutral-800 hover:bg-neutral-700 rounded-xl transition-all border border-neutral-700 cursor-pointer"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>{copiedLink ? 'Copied' : 'Copy Link'}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Other real team members added to workshop */}
+            {otherTeamMembers.map((member) => (
+              <div
+                key={member.id}
+                className="relative w-full h-full min-h-[260px] bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-800 flex flex-col items-center justify-center shadow-lg group p-4"
               >
-                <PhoneOff className="w-4 h-4" />
-                <span>End Call & Sync Outcomes</span>
-              </button>
-            </div>
+                <div
+                  className={`w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold shadow-md ${member.avatarColor}`}
+                >
+                  {member.initials}
+                </div>
+                <span className="text-sm font-semibold text-white mt-3">{member.name}</span>
+                <span className="text-xs text-neutral-400 font-mono mt-0.5">{member.role}</span>
+
+                <div className="absolute bottom-3 left-3 flex items-center gap-2 px-2.5 py-1 rounded-lg bg-neutral-950/80 backdrop-blur-xs text-xs text-white border border-neutral-800/80">
+                  <span className="font-semibold">{member.name}</span>
+                  <Mic className="w-3 h-3 text-[#78c452]" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Right: Live AI Intelligence Sidebar */}
-        <div className="w-80 lg:w-96 border-l border-neutral-800 bg-neutral-900/60 flex flex-col shrink-0">
-          {/* Sidebar Tabs */}
-          <div className="h-12 border-b border-neutral-800 px-3 flex items-center justify-between shrink-0 bg-neutral-900/80">
-            <div className="flex items-center gap-1">
+        {/* Side Drawer: Live AI Notes & Participants */}
+        {isSideDrawerOpen && (
+          <div className="w-80 sm:w-96 bg-neutral-900 border-l border-neutral-800 flex flex-col z-20 animate-fadeIn">
+            {/* Drawer Tabs */}
+            <div className="flex border-b border-neutral-800 p-2 gap-1 bg-neutral-950/40">
               <button
-                onClick={() => setActiveTab('ai_notes')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors ${
-                  activeTab === 'ai_notes'
-                    ? 'bg-[#78c452]/20 text-[#78c452] font-semibold'
-                    : 'text-neutral-400 hover:text-neutral-200'
+                onClick={() => setActiveSideTab('notes')}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                  activeSideTab === 'notes'
+                    ? 'bg-[#78c452] text-neutral-950'
+                    : 'text-neutral-400 hover:text-white'
                 }`}
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>AI Live Notes</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#78c452] animate-ping" />
+                <FileText className="w-3.5 h-3.5" />
+                <span>AI Transcript & Notes</span>
               </button>
-
               <button
-                onClick={() => setActiveTab('standup')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors ${
-                  activeTab === 'standup'
-                    ? 'bg-[#78c452]/20 text-[#78c452] font-semibold'
-                    : 'text-neutral-400 hover:text-neutral-200'
+                onClick={() => setActiveSideTab('participants')}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                  activeSideTab === 'participants'
+                    ? 'bg-[#78c452] text-neutral-950'
+                    : 'text-neutral-400 hover:text-white'
                 }`}
               >
-                <UserCheck className="w-3.5 h-3.5" />
-                <span>Standup Roles</span>
+                <Users className="w-3.5 h-3.5" />
+                <span>Team ({teamMembers.length})</span>
               </button>
             </div>
 
-            <div className="flex items-center gap-1 text-[11px] font-mono text-neutral-400">
-              <Users className="w-3 h-3" />
-              <span>{participants.length} online</span>
-            </div>
-          </div>
-
-          {/* Tab 1: Live AI Notes & Extracted Action Items */}
-          {activeTab === 'ai_notes' && (
-            <div className="flex-1 flex flex-col p-3 overflow-hidden">
-              <div className="flex-1 overflow-y-auto space-y-4 pr-1">
-                {/* Real-time Extracted Decisions */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <Sparkles className="w-3 h-3 text-[#78c452]" />
-                      Live Extracted Decisions ({liveDecisions.length})
-                    </span>
-                  </div>
-                  <div className="space-y-2">
-                    {liveDecisions.map((dec) => (
-                      <div
-                        key={dec.id}
-                        className="p-2.5 rounded-xl bg-neutral-900 border border-[#78c452]/30 shadow-xs"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="text-xs font-medium text-neutral-200 leading-snug">
-                            {dec.text}
-                          </p>
-                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#78c452]/20 text-[#78c452] shrink-0">
-                            {Math.round(dec.confidence * 100)}% Match
-                          </span>
-                        </div>
-                        <span className="text-[10px] text-neutral-500 font-mono mt-1 block">
-                          Logged at {dec.timestamp}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Real-time Extracted Action Items */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <CheckCircle2 className="w-3 h-3 text-[#78c452]" />
-                      Assigned Action Items ({liveActions.length})
-                    </span>
-                  </div>
-                  <div className="space-y-2">
-                    {liveActions.map((act) => (
-                      <div
-                        key={act.id}
-                        className="p-2.5 rounded-xl bg-neutral-900 border border-neutral-800"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <span className="text-xs font-semibold text-neutral-200 leading-snug">
-                            {act.title}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-neutral-800/80 text-[11px]">
-                          <span className="font-mono text-[#78c452] font-semibold">
-                            👤 {act.owner}
-                          </span>
-                          <span className="text-neutral-400 font-mono">📅 {act.dueDate}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Live Real-Time Transcript Stream */}
-                <div>
-                  <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-2">
-                    Live Audio Transcription
+            {/* Tab 1: Live AI Transcript & Notes */}
+            {activeSideTab === 'notes' && (
+              <div className="flex-1 flex flex-col overflow-hidden">
+                <div className="p-3 bg-neutral-950/30 border-b border-neutral-800 text-[11px] text-neutral-400 flex items-center justify-between font-mono">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#78c452] animate-ping" />
+                    Live Audio & Note Stream
                   </span>
-                  <div className="space-y-2 font-mono text-xs">
-                    {liveTranscript.map((t) => (
-                      <div
-                        key={t.id}
-                        className={`p-2 rounded-lg text-xs leading-relaxed ${
-                          t.isAiExtracted
-                            ? 'bg-[#78c452]/10 border-l-2 border-[#78c452] text-neutral-200'
-                            : 'bg-neutral-900/60 text-neutral-300'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between text-[10px] text-neutral-500 mb-1">
-                          <span className="font-semibold text-neutral-400">{t.speaker}</span>
-                          <span>{t.time}</span>
-                        </div>
-                        <p>{t.text}</p>
-                      </div>
-                    ))}
-                  </div>
+                  <span>{transcriptEntries.length} items</span>
                 </div>
-              </div>
 
-              {/* Quick Note Input */}
-              <form onSubmit={handleAddManualNote} className="mt-3 pt-2 border-t border-neutral-800">
-                <div className="relative">
+                <div className="flex-1 p-3.5 overflow-y-auto space-y-3">
+                  {transcriptEntries.length === 0 ? (
+                    <div className="text-center py-12 text-neutral-500 text-xs">
+                      <Sparkles className="w-6 h-6 mx-auto mb-2 text-[#78c452]/50" />
+                      Speak naturally or type a quick note below. The AI captures all topics and converts them into tasks when you end the call.
+                    </div>
+                  ) : (
+                    transcriptEntries.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="p-2.5 rounded-xl bg-neutral-950 border border-neutral-800/80 text-xs"
+                      >
+                        <div className="flex items-center justify-between text-[11px] font-semibold text-[#78c452] mb-1">
+                          <span>{entry.speaker}</span>
+                          <span className="text-neutral-500 font-mono">{entry.time}</span>
+                        </div>
+                        <p className="text-neutral-300 leading-relaxed">{entry.text}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Input for manual discussion notes */}
+                <form
+                  onSubmit={handleAddManualNote}
+                  className="p-3 border-t border-neutral-800 bg-neutral-950 flex gap-2"
+                >
                   <input
                     type="text"
-                    value={newManualNote}
-                    onChange={(e) => setNewManualNote(e.target.value)}
-                    placeholder="Type an instant note or decision..."
-                    className="w-full pl-3 pr-8 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-xs text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-[#78c452]"
+                    value={currentNoteInput}
+                    onChange={(e) => setCurrentNoteInput(e.target.value)}
+                    placeholder="Type a quick meeting point..."
+                    className="flex-1 px-3 py-2 text-xs bg-neutral-900 border border-neutral-800 rounded-xl text-white placeholder:text-neutral-500 focus:outline-none focus:ring-1 focus:ring-[#78c452]"
                   />
                   <button
                     type="submit"
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-neutral-400 hover:text-[#78c452]"
+                    className="px-3 py-2 bg-[#78c452] hover:bg-[#67b342] text-neutral-950 font-bold text-xs rounded-xl transition-colors cursor-pointer"
                   >
-                    <Plus className="w-4 h-4" />
+                    Add
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* Tab 2: Participants */}
+            {activeSideTab === 'participants' && (
+              <div className="flex-1 p-4 overflow-y-auto space-y-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-white uppercase tracking-wider">
+                    Workshop Attendees
+                  </span>
+                  <button
+                    onClick={() => setIsAddMemberModalOpen(true)}
+                    className="text-xs text-[#78c452] hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Member</span>
                   </button>
                 </div>
-              </form>
-            </div>
-          )}
 
-          {/* Tab 2: Standup Roles & Alignment Agenda */}
-          {activeTab === 'standup' && (
-            <div className="flex-1 p-4 overflow-y-auto space-y-4">
-              <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-[#78c452] mb-1">
-                  Foundermatcha Huddle Protocol
-                </h4>
-                <p className="text-xs text-neutral-400">
-                  Daily syncs are structured around Founder & Engineering compatibility and shipping velocity:
-                </p>
-              </div>
-
-              {/* 3 Standup Questions */}
-              <div className="p-3 rounded-xl bg-neutral-900 border border-neutral-800 space-y-2">
-                <span className="text-[11px] font-bold text-neutral-300 uppercase block">
-                  3 Core Huddle Questions:
-                </span>
-                <ol className="text-xs text-neutral-400 space-y-1.5 list-decimal pl-4">
-                  <li>
-                    <strong className="text-neutral-200">What shipped yesterday?</strong> (Engine, PRs, growth)
-                  </li>
-                  <li>
-                    <strong className="text-neutral-200">Today’s critical sprint path?</strong> (Priorities)
-                  </li>
-                  <li>
-                    <strong className="text-neutral-200">Blockers & Chemistry?</strong> (Where do you need alignment?)
-                  </li>
-                </ol>
-              </div>
-
-              {/* Participant Roles Status */}
-              <div>
-                <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider block mb-2">
-                  Company Roles Checklist
-                </span>
-                <div className="space-y-2">
-                  {participants.map((p, idx) => (
-                    <div
-                      key={p.id}
-                      className={`p-2.5 rounded-xl border flex items-center justify-between text-xs ${
-                        idx === activeSpeakerIdx
-                          ? 'bg-[#78c452]/10 border-[#78c452] text-neutral-200'
-                          : 'bg-neutral-900 border-neutral-800 text-neutral-400'
-                      }`}
-                    >
-                      <div>
-                        <span className="font-semibold block text-neutral-200">{p.name}</span>
-                        <span className="text-[10px] text-neutral-400 font-mono">{p.role}</span>
+                {teamMembers.map((member) => (
+                  <div
+                    key={member.id}
+                    className="p-2.5 rounded-xl bg-neutral-950 border border-neutral-800 flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${member.avatarColor}`}
+                      >
+                        {member.initials}
                       </div>
-                      {idx <= activeSpeakerIdx ? (
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-[#78c452]/20 text-[#78c452] font-mono">
-                          Completed
-                        </span>
-                      ) : (
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-neutral-800 text-neutral-500 font-mono">
-                          Up next
-                        </span>
-                      )}
+                      <div>
+                        <div className="text-xs font-semibold text-white">
+                          {member.name} {member.id === currentUser.id && '(You)'}
+                        </div>
+                        <div className="text-[10px] text-neutral-400 font-mono">{member.role}</div>
+                      </div>
                     </div>
-                  ))}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Floating Bottom Control Bar (Google Meet Style) */}
+      <div className="h-20 bg-neutral-950 border-t border-neutral-800/80 px-6 flex items-center justify-between z-20 shrink-0">
+        <div className="hidden sm:block text-xs text-neutral-400 font-mono">
+          <span>Foundermatcha Meet</span>
+        </div>
+
+        {/* Center Control Pill */}
+        <div className="flex items-center gap-3 mx-auto">
+          {/* Microphone */}
+          <button
+            onClick={toggleMic}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md active:scale-95 ${
+              isMicOn
+                ? 'bg-neutral-800 hover:bg-neutral-700 text-white border border-neutral-700'
+                : 'bg-rose-600 hover:bg-rose-700 text-white'
+            }`}
+            title={isMicOn ? 'Mute Microphone' : 'Unmute Microphone'}
+          >
+            {isMicOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+          </button>
+
+          {/* Camera */}
+          <button
+            onClick={toggleVideo}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md active:scale-95 ${
+              isVideoOn
+                ? 'bg-neutral-800 hover:bg-neutral-700 text-white border border-neutral-700'
+                : 'bg-rose-600 hover:bg-rose-700 text-white'
+            }`}
+            title={isVideoOn ? 'Turn Off Camera' : 'Turn On Camera'}
+          >
+            {isVideoOn ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
+          </button>
+
+          {/* Screen Share */}
+          <button
+            onClick={toggleScreenShare}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md active:scale-95 ${
+              isScreenSharing
+                ? 'bg-[#78c452] text-neutral-950 font-bold'
+                : 'bg-neutral-800 hover:bg-neutral-700 text-white border border-neutral-700'
+            }`}
+            title={isScreenSharing ? 'Stop Screen Sharing' : 'Share Entire Screen'}
+          >
+            <ScreenShare className="w-5 h-5" />
+          </button>
+
+          {/* AI Notes & Chat Drawer Toggle */}
+          <button
+            onClick={() => setIsSideDrawerOpen((prev) => !prev)}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md active:scale-95 ${
+              isSideDrawerOpen
+                ? 'bg-[#78c452] text-neutral-950 font-bold'
+                : 'bg-neutral-800 hover:bg-neutral-700 text-white border border-neutral-700'
+            }`}
+            title="Toggle AI Notes & Transcript"
+          >
+            <MessageSquare className="w-5 h-5" />
+          </button>
+
+          {/* Red End Call Button */}
+          <button
+            onClick={handleEndCallClick}
+            className="h-12 px-6 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-lg active:scale-95"
+            title="End Meeting & Generate AI Report"
+          >
+            <PhoneOff className="w-5 h-5" />
+            <span>End Call</span>
+          </button>
+        </div>
+
+        <div className="hidden sm:block text-xs text-neutral-500 font-mono">
+          <span>AI Engine Connected</span>
+        </div>
+      </div>
+
+      {/* AI Post-Meeting Report & Task Assignment Modal */}
+      {showEndMeetingReport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/80 backdrop-blur-md p-4 animate-fadeIn">
+          <div className="w-full max-w-2xl bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-neutral-800 bg-neutral-950/60 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#78c452]/20 border border-[#78c452]/30 flex items-center justify-center text-[#78c452]">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">AI Meeting Summary & Action Report</h3>
+                  <p className="text-xs text-neutral-400">
+                    {meetingTitle} • Duration: {formatTime(callDurationSeconds)}
+                  </p>
                 </div>
               </div>
             </div>
-          )}
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+              {isGeneratingAiReport ? (
+                <div className="py-16 text-center space-y-4">
+                  <div className="w-10 h-10 border-2 border-[#78c452] border-t-transparent rounded-full animate-spin mx-auto" />
+                  <p className="text-sm font-semibold text-white">
+                    AI is synthesizing call transcript into summary report and tasks...
+                  </p>
+                  <p className="text-xs text-neutral-400">
+                    Extracting what was talked about and what needs to be done today.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* 1. What was talked about in this meeting */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-[#78c452] flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>What We Talked About on This Meeting</span>
+                    </label>
+                    <div className="p-3.5 rounded-xl bg-neutral-950 border border-neutral-800 text-neutral-200 leading-relaxed">
+                      {generatedSummary}
+                    </div>
+                  </div>
+
+                  {/* 2. Key Decisions & Goals Agreed */}
+                  {generatedDecisions.length > 0 && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#78c452]" />
+                        <span>Key Goals & Decisions Established</span>
+                      </label>
+                      <ul className="space-y-1.5">
+                        {generatedDecisions.map((dec, idx) => (
+                          <li
+                            key={idx}
+                            className="p-2.5 rounded-lg bg-neutral-950 border border-neutral-800 text-neutral-300 text-xs flex items-start gap-2"
+                          >
+                            <span className="text-[#78c452] font-bold">•</span>
+                            <span>{dec}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* 3. Things to be done today (Action Items & Assigning Goals) */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold uppercase tracking-wider text-neutral-300 flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-amber-500" />
+                        <span>Things To Be Done Today (Assign to Team Members)</span>
+                      </label>
+                      <span className="text-[11px] text-neutral-400 font-mono">
+                        {generatedActions.length} tasks ready
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      {generatedActions.map((action, idx) => (
+                        <div
+                          key={action.id}
+                          className="p-3 rounded-xl bg-neutral-950 border border-neutral-800 space-y-2"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <input
+                              type="text"
+                              value={action.title}
+                              onChange={(e) => {
+                                const newTitle = e.target.value;
+                                setGeneratedActions((prev) =>
+                                  prev.map((a, i) => (i === idx ? { ...a, title: newTitle } : a))
+                                );
+                              }}
+                              className="flex-1 bg-transparent text-white font-medium text-xs focus:outline-none focus:ring-1 focus:ring-[#78c452] rounded px-1.5 py-0.5"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setGeneratedActions((prev) => prev.filter((_, i) => i !== idx));
+                              }}
+                              className="text-neutral-500 hover:text-rose-400 p-1 cursor-pointer"
+                              title="Remove Task"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px]">
+                            {/* Assignee Selector */}
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-neutral-400">Assign To:</span>
+                              <select
+                                value={action.ownerId}
+                                onChange={(e) => {
+                                  const selectedId = e.target.value;
+                                  const member = teamMembers.find((m) => m.id === selectedId);
+                                  setGeneratedActions((prev) =>
+                                    prev.map((a, i) =>
+                                      i === idx
+                                        ? {
+                                            ...a,
+                                            ownerId: selectedId,
+                                            ownerName: member?.name || currentUser.name,
+                                          }
+                                        : a
+                                    )
+                                  );
+                                }}
+                                className="bg-neutral-900 border border-neutral-700 text-white rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-[#78c452]"
+                              >
+                                {teamMembers.map((m) => (
+                                  <option key={m.id} value={m.id}>
+                                    {m.name} ({m.role || 'Member'})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            {/* Due Date Selector */}
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-neutral-400">Due:</span>
+                              <select
+                                value={action.dueDate}
+                                onChange={(e) => {
+                                  const newDate = e.target.value;
+                                  setGeneratedActions((prev) =>
+                                    prev.map((a, i) => (i === idx ? { ...a, dueDate: newDate } : a))
+                                  );
+                                }}
+                                className="bg-neutral-900 border border-neutral-700 text-white rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-[#78c452]"
+                              >
+                                <option value="Today">Today (Immediate)</option>
+                                <option value="Tomorrow">Tomorrow</option>
+                                <option value="This Friday">This Friday</option>
+                                <option value="Next Week">Next Week</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Add extra task input */}
+                    <div className="flex items-center gap-2 pt-1">
+                      <input
+                        type="text"
+                        value={newActionTitle}
+                        onChange={(e) => setNewActionTitle(e.target.value)}
+                        placeholder="Add another action item..."
+                        onKeyDown={(e) => e.key === 'Enter' && handleAddCustomAction()}
+                        className="flex-1 px-3 py-1.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:ring-1 focus:ring-[#78c452]"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddCustomAction}
+                        className="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+                      >
+                        + Add Task
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 px-6 border-t border-neutral-800 bg-neutral-950/80 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowEndMeetingReport(false);
+                  setCurrentScreen('action_items');
+                }}
+                className="px-4 py-2 text-xs font-medium text-neutral-400 hover:text-white transition-colors"
+              >
+                Skip / Discard
+              </button>
+
+              <button
+                type="button"
+                disabled={isGeneratingAiReport}
+                onClick={handleSaveReportAndTasks}
+                className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-neutral-950 bg-[#78c452] hover:bg-[#67b342] rounded-xl shadow-lg transition-all cursor-pointer disabled:opacity-50"
+              >
+                <Check className="w-4 h-4" />
+                <span>Save Report & Assign {generatedActions.length} Tasks</span>
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

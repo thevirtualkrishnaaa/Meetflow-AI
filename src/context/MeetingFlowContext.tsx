@@ -143,7 +143,7 @@ export const MeetingFlowProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const isAuthenticated = !!authUser;
 
   // 2. Navigation & UI state
-  const [currentScreen, setCurrentScreen] = useState<AppScreen>('overview');
+  const [currentScreen, setCurrentScreen] = useState<AppScreen>('video_room');
   const [selectedMeetingId, setSelectedMeetingId] = useState<string>('');
   const [activeMeetingTab, setActiveMeetingTab] = useState<'overview' | 'transcript' | 'decisions' | 'action_items'>('overview');
 
@@ -164,7 +164,7 @@ export const MeetingFlowProvider: React.FC<{ children: React.ReactNode }> = ({ c
   });
 
   // 4. Workspace Data initialization (Per-user persistent store)
-  const getUserStorageKey = (userId: string) => `foundermatcha_data_v4_${userId}`;
+  const getUserStorageKey = (userId: string) => `foundermatcha_workshop_v6_${userId}`;
 
   const loadUserData = (user: AuthUser | null) => {
     if (!user) {
@@ -186,7 +186,7 @@ export const MeetingFlowProvider: React.FC<{ children: React.ReactNode }> = ({ c
       console.error('Error loading saved workspace data:', e);
     }
 
-    // Default user member
+    // Default user member (pure real account)
     const initialUserMember: TeamMember = {
       id: user.id,
       name: user.name,
@@ -201,22 +201,7 @@ export const MeetingFlowProvider: React.FC<{ children: React.ReactNode }> = ({ c
       completedTasks: 0,
     };
 
-    // If Foundermatcha admin/founder account, seed initial starter meetings for instant exploration
-    if (
-      user.email === 'admin@meetingflow.ai' ||
-      user.email === 'krishna@foundermatcha.com' ||
-      user.email === 'krishna@foundermacha.com'
-    ) {
-      return {
-        meetings: INITIAL_MEETINGS,
-        actionItems: INITIAL_ACTION_ITEMS,
-        decisions: INITIAL_DECISIONS,
-        teamMembers: INITIAL_TEAM_MEMBERS,
-        notifications: INITIAL_NOTIFICATIONS,
-      };
-    }
-
-    // Real new account starts completely clean!
+    // Every workspace starts 100% clean and pure with zero demo information!
     return {
       meetings: [],
       actionItems: [],
@@ -225,7 +210,7 @@ export const MeetingFlowProvider: React.FC<{ children: React.ReactNode }> = ({ c
       notifications: [
         {
           id: `welcome-${Date.now()}`,
-          text: `Welcome to ${user.workspaceName}! Start your first meeting or invite teammates.`,
+          text: `Welcome to ${user.workspaceName}! Start a video call or add your team members to begin.`,
           timeAgo: 'Just now',
           type: 'task_completed' as const,
           read: false,
@@ -522,14 +507,8 @@ export const MeetingFlowProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const loadSampleData = () => {
-    setMeetings(INITIAL_MEETINGS);
-    setActionItems(INITIAL_ACTION_ITEMS);
-    setDecisions(INITIAL_DECISIONS);
-    setTeamMembers(INITIAL_TEAM_MEMBERS);
-    setNotifications(INITIAL_NOTIFICATIONS);
-    if (INITIAL_MEETINGS.length > 0) {
-      setSelectedMeetingId(INITIAL_MEETINGS[0].id);
-    }
+    // Pure clean workshop mode - no demo data is loaded
+    resetToEmptyWorkspace();
   };
 
   const openMeetingDetail = (

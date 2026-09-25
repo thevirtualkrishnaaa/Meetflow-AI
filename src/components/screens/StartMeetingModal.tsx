@@ -265,16 +265,17 @@ export const StartMeetingModal: React.FC = () => {
       title: title.trim() || 'Untitled Team Meeting',
       project,
       participantIds: selectedParticipants,
-      rawTranscript: rawTranscript.trim() || SAMPLE_TRANSCRIPT_PRESETS[0].text,
+      rawTranscript: rawTranscript.trim() || 'Meeting discussion and key action items.',
     });
   };
 
   const handleApplyPreset = (index: number) => {
     const preset = SAMPLE_TRANSCRIPT_PRESETS[index];
-    setTitle(preset.title);
-    setProject(preset.project);
-    setSelectedParticipants(preset.participants);
-    setRawTranscript(preset.text);
+    if (preset) {
+      setTitle(preset.title);
+      setProject(preset.project);
+      setRawTranscript(preset.transcript);
+    }
   };
 
   if (!isStartMeetingOpen) return null;

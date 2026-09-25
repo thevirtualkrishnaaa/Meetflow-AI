@@ -1,213 +1,304 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useMeetingFlow } from '../../context/MeetingFlowContext';
+import { Avatar } from '../ui/Avatar';
 import {
-  AlertTriangle,
-  ArrowUpRight,
   BarChart3,
   Calendar,
   CheckCircle2,
-  CheckSquare,
-  Lightbulb,
-  Sparkles,
+  Clock,
   TrendingUp,
+  Users,
+  Video,
+  AlertCircle,
+  Sparkles,
+  Check,
+  Send,
 } from 'lucide-react';
 
 export const ReportsScreen: React.FC = () => {
-  const { meetings, actionItems, decisions } = useMeetingFlow();
+  const { actionItems, meetings, teamMembers, currentUser, setCurrentScreen } =
+    useMeetingFlow();
 
-  const totalMeetings = meetings.length;
-  const totalActionsCreated = actionItems.length;
-  const totalCompleted = actionItems.filter((a) => a.status === 'Completed').length;
-  const totalOverdue = actionItems.filter((a) => a.status === 'Overdue').length;
-  const totalDecisions = decisions.length;
+  const [copiedNudgeId, setCopiedNudgeId] = useState<string | null>(null);
+
+  const totalTasks = actionItems.length;
+  const completedTasks = actionItems.filter((t) => t.status === 'Completed').length;
+  const openTasks = actionItems.filter((t) => t.status !== 'Completed').length;
+  const todayTasks = actionItems.filter(
+    (t) => t.status !== 'Completed' && t.dueDate.toLowerCase().includes('today')
+  ).length;
+
   const completionRate =
-    totalActionsCreated > 0 ? Math.round((totalCompleted / totalActionsCreated) * 100) : 100;
-  const avgActionsPerMeeting =
-    totalMeetings > 0 ? (totalActionsCreated / totalMeetings).toFixed(1) : '0';
+    totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
 
-  // Weekly data for simple visual chart
-  const weeklyData = [
-    { week: 'W1', created: Math.max(1, Math.round(totalActionsCreated * 0.2)), completed: Math.round(totalCompleted * 0.2), meetings: Math.round(totalMeetings * 0.2) },
-    { week: 'W2', created: Math.max(1, Math.round(totalActionsCreated * 0.25)), completed: Math.round(totalCompleted * 0.25), meetings: Math.round(totalMeetings * 0.25) },
-    { week: 'W3', created: Math.max(1, Math.round(totalActionsCreated * 0.25)), completed: Math.round(totalCompleted * 0.25), meetings: Math.round(totalMeetings * 0.25) },
-    { week: 'W4 (Current)', created: Math.max(1, Math.round(totalActionsCreated * 0.3)), completed: Math.round(totalCompleted * 0.3), meetings: Math.round(totalMeetings * 0.3) },
-  ];
+  // Build team member follow-up status
+  const memberFollowUps = teamMembers.map((member) => {
+    const memberTasks = actionItems.filter((t) => t.ownerId === member.id);
+    const memberCompleted = memberTasks.filter((t) => t.status === 'Completed').length;
+    const memberOpen = memberTasks.filter((t) => t.status !== 'Completed').length;
+    const memberDueToday = memberTasks.filter(
+      (t) => t.status !== 'Completed' && t.dueDate.toLowerCase().includes('today')
+    ).length;
+
+    let status: 'All Clear' | 'On Track' | 'Needs Follow-up' = 'All Clear';
+    if (memberDueToday > 0) {
+      status = 'Needs Follow-up';
+    } else if (memberOpen > 0) {
+      status = 'On Track';
+    }
+
+    return {
+      member,
+      total: memberTasks.length,
+      open: memberOpen,
+      completed: memberCompleted,
+      dueToday: memberDueToday,
+      status,
+    };
+  });
+
+  const handleSendNudge = (memberId: string, memberName: string) => {
+    const text = `Hi ${memberName}, checking in from Foundermatcha regarding your workshop tasks due today. Let me know if you need any unblocking!`;
+    navigator.clipboard.writeText(text);
+    setCopiedNudgeId(memberId);
+    setTimeout(() => setCopiedNudgeId(null), 2500);
+  };
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-16">
+    <div className="space-y-8 max-w-6xl mx-auto pb-16 font-sans">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-neutral-900">
-          Execution Analytics
-        </h1>
-        <p className="text-sm text-neutral-500 mt-1">
-          Objective metrics on team velocity, follow-through rate, and meeting outcomes.
-        </p>
-      </div>
-
-      {/* High-Level Metric Tiles */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs">
-          <div className="text-xs text-neutral-500 font-medium">Meetings Completed</div>
-          <div className="text-2xl font-bold font-mono text-neutral-900 mt-1">
-            {totalMeetings}
-          </div>
-          <div className="text-[11px] text-emerald-600 font-medium mt-1 flex items-center gap-0.5">
-            <ArrowUpRight className="w-3 h-3" />
-            <span>{totalMeetings === 0 ? 'Start your first meeting' : 'Active record'}</span>
-          </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-neutral-900">
+            Weekly Reports & Analytics
+          </h1>
+          <p className="text-xs sm:text-sm text-neutral-500 mt-1">
+            Weekly task completion analytics, team member follow-up tracking, and workshop velocity.
+          </p>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs">
-          <div className="text-xs text-neutral-500 font-medium">Action Items Created</div>
-          <div className="text-2xl font-bold font-mono text-neutral-900 mt-1">
-            {totalActionsCreated}
-          </div>
-          <div className="text-[11px] text-neutral-400 mt-1">{avgActionsPerMeeting} per meeting avg</div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs">
-          <div className="text-xs text-neutral-500 font-medium">Actions Completed</div>
-          <div className="text-2xl font-bold font-mono text-emerald-700 mt-1">
-            {totalCompleted}
-          </div>
-          <div className="text-[11px] text-emerald-600 font-medium mt-1 flex items-center gap-0.5">
-            <ArrowUpRight className="w-3 h-3" />
-            <span>{completionRate}% completion rate</span>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs">
-          <div className="text-xs text-neutral-500 font-medium">Overdue Actions</div>
-          <div className="text-2xl font-bold font-mono text-rose-600 mt-1">
-            {totalOverdue}
-          </div>
-          <div className="text-[11px] text-rose-600 font-medium mt-1">
-            {totalOverdue === 0 ? 'On schedule' : 'Attention needed'}
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs">
-          <div className="text-xs text-neutral-500 font-medium">Decisions Logged</div>
-          <div className="text-2xl font-bold font-mono text-amber-600 mt-1">
-            {totalDecisions}
-          </div>
-          <div className="text-[11px] text-neutral-400 mt-1">Searchable archive</div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setCurrentScreen('video_room')}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-neutral-950 bg-[#78c452] hover:bg-[#67b342] rounded-xl transition-all shadow-sm cursor-pointer"
+          >
+            <Video className="w-3.5 h-3.5" />
+            <span>Launch Video Meeting</span>
+          </button>
         </div>
       </div>
 
-      {/* Simple Execution Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Chart 1: Action Item Completion Over Time */}
-        <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-2xs space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-sm font-semibold text-neutral-900">
-                Weekly Action Completion Velocity
-              </h2>
-              <p className="text-xs text-neutral-500 mt-0.5">
-                Comparison of commitments made vs items resolved.
-              </p>
-            </div>
-            <div className="flex items-center gap-3 text-xs">
-              <span className="flex items-center gap-1.5 text-neutral-600">
-                <span className="w-2.5 h-2.5 rounded bg-indigo-600" />
-                <span>Completed</span>
-              </span>
-              <span className="flex items-center gap-1.5 text-neutral-600">
-                <span className="w-2.5 h-2.5 rounded bg-neutral-200" />
-                <span>Created</span>
-              </span>
-            </div>
+      {/* Metric Cards Banner */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-5 rounded-2xl border border-neutral-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-neutral-500 mb-1">
+            <span className="text-xs font-semibold">Weekly Completion</span>
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           </div>
+          <div className="text-3xl font-black text-neutral-900 mt-1">{completionRate}%</div>
+          <p className="text-xs text-neutral-400 mt-1">
+            {completedTasks} of {totalTasks} deliverables done
+          </p>
+          <div className="w-full bg-neutral-100 h-1.5 rounded-full mt-3 overflow-hidden">
+            <div
+              className="bg-[#78c452] h-full rounded-full transition-all"
+              style={{ width: `${completionRate}%` }}
+            />
+          </div>
+        </div>
 
-          <div className="pt-4 space-y-4">
-            {weeklyData.map((item) => (
-              <div key={item.week} className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-medium text-neutral-700">{item.week}</span>
-                  <span className="font-mono text-neutral-500 text-[11px]">
-                    {item.completed} / {item.created} ({Math.round((item.completed / item.created) * 100)}%)
+        <div className="bg-white p-5 rounded-2xl border border-neutral-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-neutral-500 mb-1">
+            <span className="text-xs font-semibold">Tasks Due Today</span>
+            <Clock className="w-4 h-4 text-amber-600" />
+          </div>
+          <div className="text-3xl font-black text-amber-600 mt-1">{todayTasks}</div>
+          <p className="text-xs text-neutral-400 mt-1">
+            {todayTasks > 0 ? 'Requires immediate team follow-up' : 'All clear for today!'}
+          </p>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-neutral-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-neutral-500 mb-1">
+            <span className="text-xs font-semibold">Open Deliverables</span>
+            <TrendingUp className="w-4 h-4 text-[#4b8b29]" />
+          </div>
+          <div className="text-3xl font-black text-neutral-900 mt-1">{openTasks}</div>
+          <p className="text-xs text-neutral-400 mt-1">Across active team members</p>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-neutral-200/80 shadow-2xs">
+          <div className="flex items-center justify-between text-neutral-500 mb-1">
+            <span className="text-xs font-semibold">Video Meetings Held</span>
+            <Video className="w-4 h-4 text-neutral-600" />
+          </div>
+          <div className="text-3xl font-black text-neutral-900 mt-1">{meetings.length}</div>
+          <p className="text-xs text-neutral-400 mt-1">AI summarized workshops</p>
+        </div>
+      </div>
+
+      {/* Follow-up Tracker: Team Accountability Table */}
+      <div className="bg-white rounded-2xl border border-neutral-200 shadow-2xs overflow-hidden">
+        <div className="p-5 border-b border-neutral-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h3 className="text-sm font-bold text-neutral-900">
+              Team Member Follow-Up Tracker
+            </h3>
+            <p className="text-xs text-neutral-500 mt-0.5">
+              Live status on who has open commitments, tasks due today, and follow-up reminders.
+            </p>
+          </div>
+          <span className="text-[11px] font-mono text-neutral-400">
+            {teamMembers.length} team members active
+          </span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-neutral-50 border-b border-neutral-200 text-neutral-500 font-semibold uppercase tracking-wider text-[10px]">
+              <tr>
+                <th className="py-3 px-5">Team Member & Role</th>
+                <th className="py-3 px-4">Open Tasks</th>
+                <th className="py-3 px-4">Due Today</th>
+                <th className="py-3 px-4">Completed</th>
+                <th className="py-3 px-4">Follow-Up Status</th>
+                <th className="py-3 px-5 text-right">Quick Follow-Up</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-100">
+              {memberFollowUps.map((item) => (
+                <tr key={item.member.id} className="hover:bg-neutral-50/60 transition-colors">
+                  <td className="py-3.5 px-5">
+                    <div className="flex items-center gap-3">
+                      <Avatar
+                        name={item.member.name}
+                        size="sm"
+                      />
+                      <div>
+                        <div className="font-bold text-neutral-900">
+                          {item.member.name} {item.member.id === currentUser.id && '(You)'}
+                        </div>
+                        <div className="text-[11px] text-neutral-500 font-mono">
+                          {item.member.role || 'Team Member'}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td className="py-3.5 px-4 font-bold text-neutral-900">
+                    {item.open}
+                  </td>
+
+                  <td className="py-3.5 px-4">
+                    {item.dueToday > 0 ? (
+                      <span className="font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                        {item.dueToday} today
+                      </span>
+                    ) : (
+                      <span className="text-neutral-400">0</span>
+                    )}
+                  </td>
+
+                  <td className="py-3.5 px-4 text-emerald-600 font-semibold">
+                    {item.completed}
+                  </td>
+
+                  <td className="py-3.5 px-4">
+                    {item.status === 'Needs Follow-up' ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                        Needs Follow-up
+                      </span>
+                    ) : item.status === 'On Track' ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                        On Track
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        All Clear
+                      </span>
+                    )}
+                  </td>
+
+                  <td className="py-3.5 px-5 text-right">
+                    {item.member.id !== currentUser.id && item.dueToday > 0 ? (
+                      <button
+                        onClick={() => handleSendNudge(item.member.id, item.member.name)}
+                        className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-neutral-700 hover:text-neutral-950 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors cursor-pointer"
+                        title="Copy reminder message"
+                      >
+                        {copiedNudgeId === item.member.id ? (
+                          <>
+                            <Check className="w-3 h-3 text-emerald-600" />
+                            <span className="text-emerald-700 font-bold">Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-3 h-3" />
+                            <span>Follow Up</span>
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <span className="text-[11px] text-neutral-400 font-mono">—</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Recent Meeting Reports & AI Summaries */}
+      <div className="bg-white rounded-2xl border border-neutral-200 p-6 shadow-2xs space-y-4">
+        <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#4b8b29]" />
+            <h3 className="text-sm font-bold text-neutral-900">
+              Recent Meeting Reports & AI Summaries
+            </h3>
+          </div>
+          <button
+            onClick={() => setCurrentScreen('meetings')}
+            className="text-xs text-[#4b8b29] hover:underline font-semibold cursor-pointer"
+          >
+            View All ({meetings.length})
+          </button>
+        </div>
+
+        {meetings.length === 0 ? (
+          <div className="py-8 text-center text-xs text-neutral-500 space-y-2">
+            <Video className="w-8 h-8 text-neutral-300 mx-auto" />
+            <p className="font-semibold text-neutral-700">No meeting reports recorded yet.</p>
+            <p className="text-[11px] text-neutral-400">
+              When you hold video calls, the AI will automatically generate complete reports and add them here.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {meetings.slice(0, 3).map((meeting) => (
+              <div
+                key={meeting.id}
+                className="p-4 rounded-xl bg-neutral-50 border border-neutral-200/80 space-y-2 text-xs"
+              >
+                <div className="flex items-center justify-between font-bold text-neutral-900">
+                  <span className="flex items-center gap-2">
+                    <Video className="w-3.5 h-3.5 text-[#4b8b29]" />
+                    {meeting.title}
+                  </span>
+                  <span className="text-[11px] text-neutral-400 font-mono font-normal">
+                    {meeting.date} • {meeting.duration}
                   </span>
                 </div>
-                <div className="h-3 w-full bg-neutral-100 rounded-md overflow-hidden flex">
-                  <div
-                    className="bg-indigo-600 h-full rounded-l-md transition-all"
-                    style={{ width: `${(item.completed / 20) * 100}%` }}
-                  />
-                  <div
-                    className="bg-neutral-300 h-full rounded-r-md transition-all"
-                    style={{ width: `${((item.created - item.completed) / 20) * 100}%` }}
-                  />
-                </div>
+                <p className="text-neutral-600 leading-relaxed">{meeting.summary}</p>
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Chart 2: Meeting Volume & Decisions by Week */}
-        <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-2xs space-y-4">
-          <div>
-            <h2 className="text-sm font-semibold text-neutral-900">
-              Meeting Efficiency & Decisions Recorded
-            </h2>
-            <p className="text-xs text-neutral-500 mt-0.5">
-              Tracking decision density per conversation.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-4 gap-3 pt-4 text-center">
-            {weeklyData.map((item, idx) => (
-              <div key={item.week} className="bg-neutral-50 p-4 rounded-xl border border-neutral-100 flex flex-col justify-between">
-                <div className="text-[11px] font-medium text-neutral-500">W{idx + 1}</div>
-                <div className="my-2">
-                  <div className="text-xl font-bold font-mono text-neutral-900">
-                    {item.meetings}
-                  </div>
-                  <div className="text-[10px] text-neutral-400">meetings</div>
-                </div>
-                <div className="pt-2 border-t border-neutral-200/60 text-xs font-mono font-semibold text-amber-700">
-                  {item.meetings * 2 + 1} decisions
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-xs text-neutral-500 bg-neutral-50 p-3 rounded-lg border border-neutral-100 mt-2">
-            Average decision yield: <strong className="text-neutral-800 font-mono">2.8 decisions</strong> per 45 minutes of meeting time.
-          </div>
-        </div>
+        )}
       </div>
-
-      {/* Team Execution Insights Section */}
-      <section className="bg-white rounded-xl border border-neutral-200 shadow-2xs p-6 space-y-4">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-indigo-600" />
-          <h2 className="text-sm font-semibold text-neutral-900">Team Execution Insights</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 bg-indigo-50/40 rounded-xl border border-indigo-100 space-y-1">
-            <div className="text-xs font-semibold text-indigo-900 flex items-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Velocity Improvement</span>
-            </div>
-            <p className="text-xs text-neutral-700 leading-relaxed">
-              Action-item completion increased by <strong>18%</strong> compared with the previous week, driven by shorter check-in cycles and clearer task ownership.
-            </p>
-          </div>
-
-          <div className="p-4 bg-amber-50/40 rounded-xl border border-amber-100 space-y-1">
-            <div className="text-xs font-semibold text-amber-900 flex items-center gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-              <span>Bottleneck Detection</span>
-            </div>
-            <p className="text-xs text-neutral-700 leading-relaxed">
-              Marketing meetings currently generate the highest number of overdue actions. Consider scoping task deliverables into sub-milestones during planning.
-            </p>
-          </div>
-        </div>
-      </section>
     </div>
   );
 };

@@ -13,14 +13,27 @@ import {
 } from 'lucide-react';
 
 const AVATAR_COLORS = [
-  { label: 'Indigo', class: 'bg-indigo-600 text-white', ring: 'ring-indigo-600' },
-  { label: 'Emerald', class: 'bg-emerald-600 text-white', ring: 'ring-emerald-600' },
-  { label: 'Blue', class: 'bg-blue-600 text-white', ring: 'ring-blue-600' },
-  { label: 'Violet', class: 'bg-violet-600 text-white', ring: 'ring-violet-600' },
-  { label: 'Rose', class: 'bg-rose-600 text-white', ring: 'ring-rose-600' },
-  { label: 'Amber', class: 'bg-amber-600 text-white', ring: 'ring-amber-600' },
-  { label: 'Cyan', class: 'bg-cyan-600 text-white', ring: 'ring-cyan-600' },
-  { label: 'Teal', class: 'bg-teal-600 text-white', ring: 'ring-teal-600' },
+  { label: 'Green', class: 'bg-[#78c452] text-neutral-950 font-bold', ring: 'ring-[#78c452]' },
+  { label: 'Emerald', class: 'bg-emerald-600 text-white font-bold', ring: 'ring-emerald-600' },
+  { label: 'Blue', class: 'bg-blue-600 text-white font-bold', ring: 'ring-blue-600' },
+  { label: 'Indigo', class: 'bg-indigo-600 text-white font-bold', ring: 'ring-indigo-600' },
+  { label: 'Violet', class: 'bg-violet-600 text-white font-bold', ring: 'ring-violet-600' },
+  { label: 'Rose', class: 'bg-rose-600 text-white font-bold', ring: 'ring-rose-600' },
+  { label: 'Amber', class: 'bg-amber-600 text-white font-bold', ring: 'ring-amber-600' },
+  { label: 'Cyan', class: 'bg-cyan-600 text-white font-bold', ring: 'ring-cyan-600' },
+];
+
+const COMMON_ROLES = [
+  'Tech Co-Founder & CTO',
+  'Lead Software Engineer',
+  'Full Stack Software Engineer',
+  'Frontend Engineer',
+  'Backend Engineer',
+  'Head of Product & Psychology',
+  'Product Manager',
+  'Head of UI/UX Design',
+  'Growth & Operations Lead',
+  'Engineering Advisor',
 ];
 
 const DEPARTMENTS = [
@@ -34,13 +47,6 @@ const DEPARTMENTS = [
   'Finance',
 ];
 
-const PRESETS = [
-  { name: 'David Thorne', role: 'Lead Software Engineer', department: 'Engineering', email: 'david@foundermatcha.com' },
-  { name: 'Elena Rostova', role: 'Tech Co-Founder & CTO', department: 'Leadership', email: 'elena@foundermatcha.com' },
-  { name: 'Sarah Chen', role: 'Head of Product & Psychology', department: 'Product', email: 'sarah@foundermatcha.com' },
-  { name: 'Marcus Vance', role: 'Growth & Operations Lead', department: 'Operations', email: 'marcus@foundermatcha.com' },
-];
-
 interface AddTeamMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -52,12 +58,13 @@ export const AddTeamMemberModal: React.FC<AddTeamMemberModalProps> = ({
   onClose,
   onMemberAdded,
 }) => {
-  const { addTeamMember } = useMeetingFlow();
+  const { addTeamMember, workspaceProfile } = useMeetingFlow();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState('');
-  const [department, setDepartment] = useState('Product');
+  const [role, setRole] = useState('Tech Co-Founder & CTO');
+  const [customRole, setCustomRole] = useState('');
+  const [department, setDepartment] = useState('Engineering');
   const [selectedColor, setSelectedColor] = useState(AVATAR_COLORS[0].class);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -71,14 +78,6 @@ export const AddTeamMemberModal: React.FC<AddTeamMemberModalProps> = ({
         : name.trim().slice(0, 2).toUpperCase()
       : 'TM';
 
-  const handleApplyPreset = (preset: typeof PRESETS[0]) => {
-    setName(preset.name);
-    setRole(preset.role);
-    setDepartment(preset.department);
-    setEmail(preset.email);
-    setErrorMessage('');
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
@@ -89,240 +88,201 @@ export const AddTeamMemberModal: React.FC<AddTeamMemberModalProps> = ({
       setErrorMessage('Please enter a valid work email address.');
       return;
     }
-    if (!role.trim()) {
-      setErrorMessage('Please specify their role or title.');
-      return;
-    }
+
+    const finalRole = role === 'Other' ? customRole.trim() || 'Team Member' : role;
 
     const created = addTeamMember({
       name: name.trim(),
       email: email.trim(),
-      role: role.trim(),
+      role: finalRole,
       department,
       avatarColor: selectedColor,
     });
 
-    // Reset form
-    setName('');
-    setEmail('');
-    setRole('');
-    setErrorMessage('');
-    onClose();
-
     if (onMemberAdded) {
       onMemberAdded(created.id);
     }
+
+    setName('');
+    setEmail('');
+    setCustomRole('');
+    setErrorMessage('');
+    onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/40 backdrop-blur-[2px] animate-fadeIn">
-      <div className="w-full max-w-xl bg-white rounded-xl shadow-2xl border border-neutral-200 overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/60 backdrop-blur-xs animate-fadeIn">
+      <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-neutral-200 overflow-hidden font-sans">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 bg-neutral-50/50">
+        <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+            <div className="w-8 h-8 rounded-xl bg-[#78c452]/20 border border-[#78c452]/30 flex items-center justify-center text-[#4b8b29]">
               <UserPlus className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-neutral-900 leading-tight">
-                Add New Team Member
-              </h2>
-              <p className="text-xs text-neutral-500 mt-0.5">
-                Add teammates to assign meeting action items and track follow-through.
+              <h2 className="text-sm font-bold text-neutral-900">Add Team Member</h2>
+              <p className="text-[11px] text-neutral-500">
+                Assign a role and onboard someone into {workspaceProfile.name}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded-md transition-colors"
+            className="p-1 text-neutral-400 hover:text-neutral-700 rounded-lg hover:bg-neutral-100 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-5">
-          {/* Quick presets */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">
-                Quick Fill Suggestions
-              </span>
-              <span className="text-[11px] text-neutral-400">Click to autofill sample</span>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {PRESETS.map((p) => (
-                <button
-                  key={p.name}
-                  type="button"
-                  onClick={() => handleApplyPreset(p)}
-                  className="px-2.5 py-1 text-xs bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 text-neutral-700 rounded-md transition-colors"
-                >
-                  + {p.name} ({p.role.split(' ')[0]})
-                </button>
-              ))}
-            </div>
-          </div>
-
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
           {errorMessage && (
-            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-lg flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-center gap-2">
               <span>{errorMessage}</span>
             </div>
           )}
 
-          {/* Name & Email */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-neutral-700 mb-1.5">
-                Full Name <span className="text-rose-500">*</span>
-              </label>
+          {/* Member Preview Card */}
+          <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200/80 flex items-center gap-3">
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-xs ${selectedColor}`}
+            >
+              {previewInitials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-bold text-neutral-900 text-sm truncate">
+                {name.trim() || 'Teammate Full Name'}
+              </div>
+              <div className="text-xs text-[#4b8b29] font-medium truncate">
+                {role === 'Other' ? customRole || 'Custom Role' : role}
+              </div>
+            </div>
+          </div>
+
+          {/* Full Name */}
+          <div>
+            <label className="block text-xs font-semibold text-neutral-700 mb-1">
+              Full Name *
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                setErrorMessage('');
+              }}
+              placeholder="e.g. Alex Miller"
+              required
+              autoFocus
+              className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-xl text-neutral-900 focus:outline-none focus:ring-2 focus:ring-[#78c452]"
+            />
+          </div>
+
+          {/* Work Email */}
+          <div>
+            <label className="block text-xs font-semibold text-neutral-700 mb-1">
+              Work Email *
+            </label>
+            <div className="relative">
+              <Mail className="w-3.5 h-3.5 text-neutral-400 absolute left-3 top-2.5" />
               <input
-                type="text"
-                value={name}
+                type="email"
+                value={email}
                 onChange={(e) => {
-                  setName(e.target.value);
+                  setEmail(e.target.value);
                   setErrorMessage('');
                 }}
-                placeholder="e.g. Maya Lin"
+                placeholder="name@foundermatcha.com"
                 required
-                className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-lg text-neutral-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all placeholder:text-neutral-400"
+                className="w-full pl-9 pr-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-xl text-neutral-900 focus:outline-none focus:ring-2 focus:ring-[#78c452]"
               />
             </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-neutral-700 mb-1.5">
-                Work Email <span className="text-rose-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setErrorMessage('');
-                  }}
-                  placeholder="maya@company.com"
-                  required
-                  className="w-full pl-8 pr-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-lg text-neutral-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all placeholder:text-neutral-400"
-                />
-                <Mail className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5" />
-              </div>
-            </div>
           </div>
 
-          {/* Role & Department */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-neutral-700 mb-1.5">
-                Role / Title <span className="text-rose-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={role}
-                  onChange={(e) => {
-                    setRole(e.target.value);
-                    setErrorMessage('');
-                  }}
-                  placeholder="e.g. Senior Frontend Architect"
-                  required
-                  className="w-full pl-8 pr-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-lg text-neutral-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all placeholder:text-neutral-400"
-                />
-                <Briefcase className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5" />
-              </div>
-            </div>
+          {/* Role Assignment */}
+          <div>
+            <label className="block text-xs font-semibold text-neutral-700 mb-1">
+              Assigned Role *
+            </label>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-xl text-neutral-900 focus:outline-none focus:ring-2 focus:ring-[#78c452]"
+            >
+              {COMMON_ROLES.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+              <option value="Other">Other / Custom Title</option>
+            </select>
 
+            {role === 'Other' && (
+              <input
+                type="text"
+                value={customRole}
+                onChange={(e) => setCustomRole(e.target.value)}
+                placeholder="Enter custom title / role..."
+                className="w-full mt-2 px-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-xl text-neutral-900 focus:outline-none focus:ring-2 focus:ring-[#78c452]"
+              />
+            )}
+          </div>
+
+          {/* Department & Avatar Color */}
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 mb-1.5">
+              <label className="block text-xs font-semibold text-neutral-700 mb-1">
                 Department
               </label>
-              <div className="relative">
-                <select
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                  className="w-full pl-8 pr-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-lg text-neutral-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
-                >
-                  {DEPARTMENTS.map((dept) => (
-                    <option key={dept} value={dept}>
-                      {dept}
-                    </option>
-                  ))}
-                </select>
-                <Layers className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-2.5" />
+              <select
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-xl text-neutral-900 focus:outline-none focus:ring-2 focus:ring-[#78c452]"
+              >
+                {DEPARTMENTS.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                Tag Color
+              </label>
+              <div className="flex items-center gap-1.5 pt-1">
+                {AVATAR_COLORS.map((color) => (
+                  <button
+                    key={color.label}
+                    type="button"
+                    onClick={() => setSelectedColor(color.class)}
+                    className={`w-5 h-5 rounded-full ${color.class} transition-all cursor-pointer ${
+                      selectedColor === color.class
+                        ? 'ring-2 ring-offset-2 ring-neutral-900 scale-110'
+                        : 'opacity-70 hover:opacity-100'
+                    }`}
+                  />
+                ))}
               </div>
             </div>
           </div>
 
-          {/* Avatar Color Picker */}
-          <div>
-            <label className="block text-xs font-semibold text-neutral-700 mb-2">
-              Profile Avatar Color
-            </label>
-            <div className="flex items-center gap-2">
-              {AVATAR_COLORS.map((c) => (
-                <button
-                  key={c.label}
-                  type="button"
-                  title={c.label}
-                  onClick={() => setSelectedColor(c.class)}
-                  className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${c.class} ${
-                    selectedColor === c.class ? `ring-2 ring-offset-2 ring-neutral-900 scale-110` : 'hover:opacity-90'
-                  }`}
-                >
-                  {selectedColor === c.class && <Check className="w-3.5 h-3.5" />}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Live Preview Card */}
-          <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-200">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-400 block mb-2">
-              Live Member Card Preview
-            </span>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm shadow-2xs ${selectedColor}`}
-                >
-                  {previewInitials}
-                </div>
-                <div>
-                  <div className="text-sm font-semibold text-neutral-900">
-                    {name.trim() || 'New Teammate'}
-                  </div>
-                  <div className="text-xs text-neutral-500">
-                    {role.trim() || 'Team Member'} · <span className="text-neutral-400">{department}</span>
-                  </div>
-                  <div className="text-[11px] text-neutral-400">
-                    {email.trim() || 'teammate@meetingflow.ai'}
-                  </div>
-                </div>
-              </div>
-              <div className="hidden sm:block text-right">
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  Ready for assignments
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="pt-2 flex items-center justify-end gap-2 border-t border-neutral-100">
+          {/* Footer Buttons */}
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-neutral-100">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors"
+              className="px-4 py-2 text-xs font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-xl transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-neutral-950 bg-[#78c452] hover:bg-[#67b342] rounded-lg shadow-sm transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-neutral-950 bg-[#78c452] hover:bg-[#67b342] rounded-xl shadow-sm transition-all cursor-pointer"
             >
               <UserPlus className="w-3.5 h-3.5" />
-              <span>Add Member to Foundermatcha</span>
+              <span>Add Member to Workshop</span>
             </button>
           </div>
         </form>

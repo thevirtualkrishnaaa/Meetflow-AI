@@ -177,13 +177,6 @@ export const OverviewScreen: React.FC = () => {
                 <Plus className="w-4 h-4" />
                 <span>Capture First Meeting</span>
               </button>
-              <button
-                onClick={loadSampleData}
-                className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium text-neutral-400 hover:text-white transition-colors"
-              >
-                <Compass className="w-4 h-4" />
-                <span>Load Demo Reference Data</span>
-              </button>
             </div>
           </div>
         </div>

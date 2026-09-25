@@ -346,15 +346,6 @@ export const SettingsScreen: React.FC = () => {
               <span>Reset to Clean Slate (Remove All Demo Data)</span>
             </button>
           )}
-
-          <button
-            type="button"
-            onClick={loadSampleData}
-            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-neutral-700 bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 rounded-lg transition-colors"
-          >
-            <Compass className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Load Demo Reference Scenarios</span>
-          </button>
         </div>
       </div>
     </div>
