@@ -35,10 +35,10 @@ const DEPARTMENTS = [
 ];
 
 const PRESETS = [
-  { name: 'Daniel Miller', role: 'Staff Backend Engineer', department: 'Engineering', email: 'daniel@meetingflow.ai' },
-  { name: 'Maya Lin', role: 'Senior UX Researcher', department: 'Design', email: 'maya@meetingflow.ai' },
-  { name: 'Kavita Rao', role: 'Customer Success Manager', department: 'Operations', email: 'kavita@meetingflow.ai' },
-  { name: 'Liam O’Connor', role: 'Demand Gen Lead', department: 'Marketing', email: 'liam@meetingflow.ai' },
+  { name: 'David Thorne', role: 'Lead Software Engineer', department: 'Engineering', email: 'david@foundermacha.com' },
+  { name: 'Elena Rostova', role: 'Tech Co-Founder & CTO', department: 'Leadership', email: 'elena@foundermacha.com' },
+  { name: 'Sarah Chen', role: 'Head of Product & Psychology', department: 'Product', email: 'sarah@foundermacha.com' },
+  { name: 'Marcus Vance', role: 'Growth & Operations Lead', department: 'Operations', email: 'marcus@foundermacha.com' },
 ];
 
 interface AddTeamMemberModalProps {
@@ -319,10 +319,10 @@ export const AddTeamMemberModal: React.FC<AddTeamMemberModalProps> = ({
             </button>
             <button
               type="submit"
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-2xs transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-neutral-950 bg-[#78c452] hover:bg-[#67b342] rounded-lg shadow-sm transition-all cursor-pointer"
             >
               <UserPlus className="w-3.5 h-3.5" />
-              <span>Add Teammate to Workspace</span>
+              <span>Add Member to FounderMacha</span>
             </button>
           </div>
         </form>

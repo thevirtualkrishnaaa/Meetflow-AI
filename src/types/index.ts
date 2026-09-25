@@ -88,6 +88,7 @@ export interface NotificationItem {
 
 export type AppScreen =
   | 'overview'
+  | 'video_room'
   | 'meetings'
   | 'meeting_detail'
   | 'action_items'

@@ -17,6 +17,7 @@ import { ProcessingScreen } from './components/screens/ProcessingScreen';
 import { AiReviewScreen } from './components/screens/AiReviewScreen';
 import { SettingsScreen } from './components/screens/SettingsScreen';
 import { AuthScreen } from './components/auth/AuthScreen';
+import { LiveVideoRoom } from './components/video/LiveVideoRoom';
 import { X } from 'lucide-react';
 
 const AppContent: React.FC = () => {
@@ -32,6 +33,8 @@ const AppContent: React.FC = () => {
     switch (currentScreen) {
       case 'overview':
         return <OverviewScreen />;
+      case 'video_room':
+        return <LiveVideoRoom />;
       case 'meetings':
         return <MeetingsScreen />;
       case 'meeting_detail':

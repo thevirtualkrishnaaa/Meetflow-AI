@@ -180,13 +180,23 @@ export const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
           )}
         </div>
 
+        {/* Live Video Room CTA */}
+        <button
+          onClick={() => setCurrentScreen('video_room')}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 rounded-lg transition-all shadow-xs active:scale-[0.98] group"
+        >
+          <span className="w-2 h-2 rounded-full bg-[#78c452] animate-ping" />
+          <span className="text-[#78c452]">Live</span>
+          <span className="hidden sm:inline text-neutral-200">Video Call</span>
+        </button>
+
         {/* Start Meeting CTA */}
         <button
           onClick={() => setIsStartMeetingOpen(true)}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-2xs whitespace-nowrap active:scale-[0.98]"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-neutral-950 bg-[#78c452] hover:bg-[#67b342] rounded-lg transition-colors shadow-2xs whitespace-nowrap active:scale-[0.98]"
         >
           <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-          <span>Start Meeting</span>
+          <span>New Sync</span>
         </button>
 
         {/* User Profile & Menu Dropdown */}

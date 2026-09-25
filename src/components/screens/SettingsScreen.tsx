@@ -239,12 +239,57 @@ export const SettingsScreen: React.FC = () => {
           </div>
         </div>
 
+        {/* Sanctuary Mode & Privacy Protocol */}
+        <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-2xs space-y-4">
+          <div className="flex items-center gap-2 border-b border-neutral-100 pb-3">
+            <Shield className="w-4 h-4 text-[#4b8b29]" />
+            <div>
+              <h2 className="text-sm font-semibold text-neutral-900">Sanctuary Privacy & Stealth Protocol</h2>
+              <span className="text-[11px] text-neutral-400 font-mono">Foundational FounderMacha Security</span>
+            </div>
+          </div>
+
+          <div className="space-y-4 text-xs">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-semibold text-neutral-900">
+                  Stealth Mode Anonymity
+                </div>
+                <div className="text-neutral-500">
+                  Hide identifying company details from prospective engineer matches until mutual NDA confirmation.
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                defaultChecked
+                className="w-4 h-4 text-[#78c452] rounded border-neutral-300"
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-neutral-100">
+              <div>
+                <div className="font-semibold text-neutral-900">
+                  End-to-End Encrypted Huddle Logs
+                </div>
+                <div className="text-neutral-500">
+                  Cryptographically sign decisions and action items with zero-knowledge audit trails.
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                defaultChecked
+                className="w-4 h-4 text-[#78c452] rounded border-neutral-300"
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Save Bar */}
         <div className="flex items-center justify-between pt-2">
           {savedNotice ? (
             <span className="text-xs font-medium text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 flex items-center gap-1.5 animate-fadeIn">
               <Check className="w-3.5 h-3.5" />
-              <span>Workspace preferences saved successfully</span>
+              <span>FounderMacha preferences saved successfully</span>
             </span>
           ) : (
             <span />
@@ -252,7 +297,7 @@ export const SettingsScreen: React.FC = () => {
 
           <button
             type="submit"
-            className="inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-2xs transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2 text-xs font-bold text-neutral-950 bg-[#78c452] hover:bg-[#67b342] rounded-lg shadow-sm transition-all cursor-pointer"
           >
             <Save className="w-3.5 h-3.5" />
             <span>Save Preferences</span>

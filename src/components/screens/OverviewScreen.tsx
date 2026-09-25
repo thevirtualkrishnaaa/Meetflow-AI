@@ -53,32 +53,96 @@ export const OverviewScreen: React.FC = () => {
   const isFreshWorkspace = meetings.length === 0 && actionItems.length === 0;
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-12">
+    <div className="space-y-8 max-w-7xl mx-auto pb-12 font-sans">
       {/* Header section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-neutral-900">
-            Good morning, {currentUser.name.split(' ')[0]}
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-[#78c452]/20 text-[#4b8b29] font-bold border border-[#78c452]/30 uppercase tracking-wider">
+              FounderMacha Executive OS
+            </span>
+            <span className="text-xs text-neutral-400 font-mono">Sanctuary Mode Active</span>
+          </div>
+          <h1 className="text-2xl font-black tracking-tight text-neutral-900">
+            Founder & Engineering Executive Hub
           </h1>
-          <p className="text-sm text-neutral-500 mt-1">
-            {workspaceProfile.name} · Real-time meeting intelligence & execution tracker.
+          <p className="text-xs sm:text-sm text-neutral-500 mt-0.5">
+            Everyday online video meetings, psychology-backed alignment, and accountable action delivery.
           </p>
         </div>
         <div className="flex items-center gap-2.5 self-start sm:self-auto">
           <button
+            onClick={() => setCurrentScreen('video_room')}
+            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-white bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 rounded-xl transition-all shadow-md group active:scale-95"
+          >
+            <div className="w-2 h-2 rounded-full bg-[#78c452] animate-ping" />
+            <span className="text-[#78c452]">Launch Video Room</span>
+          </button>
+          <button
             onClick={() => setIsAddMemberModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-neutral-700 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-lg transition-colors shadow-2xs"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-neutral-700 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-xl transition-colors shadow-2xs"
           >
             <UserPlus className="w-3.5 h-3.5 text-neutral-500" />
-            <span>Add Teammate</span>
+            <span>Add Role</span>
           </button>
           <button
             onClick={() => setIsStartMeetingOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-2xs"
+            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-neutral-950 bg-[#78c452] hover:bg-[#67b342] rounded-xl transition-all shadow-sm active:scale-95"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>Start Meeting</span>
+            <span>New Sync</span>
           </button>
+        </div>
+      </div>
+
+      {/* Flagship: FounderMacha Everyday Video Huddle Card */}
+      <div className="rounded-2xl p-6 sm:p-7 bg-gradient-to-r from-neutral-950 via-neutral-900 to-[#121c10] text-white shadow-xl border border-neutral-800 relative overflow-hidden">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-3 max-w-2xl">
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold bg-[#78c452]/20 text-[#78c452] border border-[#78c452]/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#78c452] animate-pulse" />
+                EVERYDAY HUDDLE SUITE
+              </span>
+              <span className="text-xs text-neutral-400 font-mono">3-Min Standup Protocol</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+              Start Today's Founder & Tech Co-Founder Video Sync
+            </h2>
+            <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">
+              Connect camera and mic, share architectural screens, review yesterday's deliverables, and let our
+              live note-taker extract decisions and action items in real time.
+            </p>
+            <div className="flex flex-wrap items-center gap-4 text-xs text-neutral-400 pt-1 font-mono">
+              <span className="flex items-center gap-1.5 text-neutral-300">
+                <span className="text-[#78c452]">●</span> 6 Company Roles Active
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1.5 text-neutral-300">
+                <span className="text-[#78c452]">●</span> Live AI Diarization
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1.5 text-neutral-300">
+                <span className="text-[#78c452]">●</span> End-to-End Encrypted
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
+            <button
+              onClick={() => setCurrentScreen('video_room')}
+              className="px-6 py-3 rounded-xl bg-[#78c452] hover:bg-[#67b342] text-neutral-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#78c452]/20 transition-all active:scale-95 cursor-pointer"
+            >
+              <span>Enter Video Room Now</span>
+              <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+            </button>
+            <button
+              onClick={() => setIsStartMeetingOpen(true)}
+              className="px-6 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-200 font-semibold text-xs border border-neutral-700/80 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            >
+              <span>Upload / Paste Transcript</span>
+            </button>
+          </div>
         </div>
       </div>
 

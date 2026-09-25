@@ -2,8 +2,12 @@
 
 @layer base {
   :root {
-    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-sans: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --font-typewriter: 'Courier Prime', monospace;
+    --color-green: #78c452;
+    --color-green-hover: #67b342;
+    --color-green-dim: #78c4521f;
   }
 
   body {
@@ -27,6 +31,6 @@
     border-radius: 3px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: #78c452;
   }
 }

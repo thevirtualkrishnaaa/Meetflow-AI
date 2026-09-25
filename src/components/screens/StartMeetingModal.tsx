@@ -20,17 +20,23 @@ import {
 } from 'lucide-react';
 
 export const StartMeetingModal: React.FC = () => {
-  const { isStartMeetingOpen, setIsStartMeetingOpen, startProcessingMeeting, teamMembers, currentUser } =
-    useMeetingFlow();
+  const {
+    isStartMeetingOpen,
+    setIsStartMeetingOpen,
+    startProcessingMeeting,
+    teamMembers,
+    currentUser,
+    setCurrentScreen,
+  } = useMeetingFlow();
 
   const [mode, setMode] = useState<'record' | 'upload' | 'import'>('record');
-  const [title, setTitle] = useState('Team Alignment & Execution Sync');
-  const [project, setProject] = useState('Product');
+  const [title, setTitle] = useState('FounderMacha Daily Executive Huddle');
+  const [project, setProject] = useState('Psychology Matching Engine');
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>(() =>
     teamMembers.map((m) => m.id)
   );
   const [rawTranscript, setRawTranscript] = useState(
-    'Alex: Let us align on this week\'s key deliverables and review open tasks.\nSarah: I will finalize the design specs and share them with engineering by Thursday.\nJames: Sounds good. I will verify the deployment pipeline and monitor server metrics.'
+    'Krishna: Let us align on today\'s sprint deliverables and review chemistry scores.\nElena: I will deploy the Sanctuary privacy handshake to staging by 3 PM.\nDavid: Sounds good. I will verify matching latency and graph benchmarks.'
   );
 
   // Sync participants with current team when modal opens
@@ -297,6 +303,32 @@ export const StartMeetingModal: React.FC = () => {
 
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto space-y-5">
+          {/* Everyday Video Call Quick Switch */}
+          <div className="p-3.5 rounded-xl bg-neutral-900 border border-neutral-800 text-white flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-2.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#78c452] animate-ping" />
+              <div>
+                <span className="text-xs font-bold block text-neutral-100">
+                  Prefer a live video call with camera, mic & standup timer?
+                </span>
+                <span className="text-[11px] text-[#78c452] font-mono">
+                  FounderMacha Everyday Video Room is active
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                cancelRecording();
+                setIsStartMeetingOpen(false);
+                setCurrentScreen('video_room');
+              }}
+              className="px-3 py-1.5 rounded-lg bg-[#78c452] hover:bg-[#67b342] text-neutral-950 font-black text-xs transition-colors shrink-0 shadow-sm cursor-pointer"
+            >
+              Launch Video Huddle
+            </button>
+          </div>
+
           {/* Method Selector Tabs */}
           <div className="grid grid-cols-3 gap-2 p-1 bg-neutral-100 rounded-lg">
             <button
@@ -623,10 +655,10 @@ export const StartMeetingModal: React.FC = () => {
             type="button"
             disabled={isRecording || isTranscribing || !rawTranscript.trim()}
             onClick={handleProcess}
-            className="inline-flex items-center gap-2 px-5 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-2xs transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-5 py-2 text-xs font-bold text-neutral-950 bg-[#78c452] hover:bg-[#67b342] rounded-lg shadow-sm transition-all disabled:opacity-50 cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Process Meeting with AI</span>
+            <span>Process Sync with AI</span>
           </button>
         </div>
       </div>
