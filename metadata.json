@@ -1,0 +1,6 @@
+{
+  "name": "MeetingFlow AI",
+  "description": "B2B SaaS meeting execution platform that turns discussions into accountable decisions, action items, owners, and follow-through.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
