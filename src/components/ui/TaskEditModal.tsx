@@ -58,8 +58,14 @@ export const TaskEditModal: React.FC = () => {
     e.preventDefault();
     if (!title.trim()) return;
 
-    const owner = teamMembers.find((m) => m.id === ownerId) || teamMembers[0];
+    const owner = teamMembers.find((m) => m.id === ownerId) || teamMembers[0] || {
+      id: 'usr_owner',
+      name: 'Workspace Member',
+      role: 'Team Lead',
+    };
     const meeting = meetings.find((m) => m.id === meetingId) || meetings[0];
+    const meetingIdVal = meeting ? meeting.id : '';
+    const meetingTitleVal = meeting ? meeting.title : 'Direct Workspace Commitment';
 
     if (isEditing && taskToEdit) {
       updateTask({
@@ -68,8 +74,8 @@ export const TaskEditModal: React.FC = () => {
         ownerId: owner.id,
         ownerName: owner.name,
         ownerRole: owner.role,
-        meetingId: meeting.id,
-        meetingTitle: meeting.title,
+        meetingId: meetingIdVal,
+        meetingTitle: meetingTitleVal,
         dueDate: dueDate.trim() || 'Next week',
         priority,
         status,
@@ -81,8 +87,8 @@ export const TaskEditModal: React.FC = () => {
         ownerId: owner.id,
         ownerName: owner.name,
         ownerRole: owner.role,
-        meetingId: meeting.id,
-        meetingTitle: meeting.title,
+        meetingId: meetingIdVal,
+        meetingTitle: meetingTitleVal,
         dueDate: dueDate.trim() || 'Next week',
         rawDueDate: new Date().toISOString().split('T')[0],
         priority,
@@ -228,6 +234,9 @@ export const TaskEditModal: React.FC = () => {
               onChange={(e) => setMeetingId(e.target.value)}
               className="w-full px-3 py-2 text-sm bg-neutral-50 border border-neutral-200 rounded-lg text-neutral-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
             >
+              {meetings.length === 0 && (
+                <option value="">Direct Workspace Commitment (No meeting)</option>
+              )}
               {meetings.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.title} ({m.date})

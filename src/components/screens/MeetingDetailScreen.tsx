@@ -206,8 +206,8 @@ ${selectedMeeting.actionItems
           {[
             { id: 'overview', label: 'Overview' },
             { id: 'transcript', label: 'Transcript' },
-            { id: 'decisions', label: `Decisions (${selectedMeeting.decisions.length})` },
-            { id: 'action_items', label: `Action Items (${selectedMeeting.actionItems.length})` },
+            { id: 'decisions', label: `Decisions (${selectedMeeting.decisions?.length || 0})` },
+            { id: 'action_items', label: `Action Items (${selectedMeeting.actionItems?.length || 0})` },
           ].map((tab) => {
             const isActive = activeMeetingTab === tab.id;
             return (
