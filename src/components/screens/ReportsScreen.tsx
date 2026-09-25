@@ -15,18 +15,22 @@ import {
 export const ReportsScreen: React.FC = () => {
   const { meetings, actionItems, decisions } = useMeetingFlow();
 
-  const totalMeetings = 18;
-  const totalActionsCreated = 64;
-  const totalCompleted = 42;
+  const totalMeetings = meetings.length;
+  const totalActionsCreated = actionItems.length;
+  const totalCompleted = actionItems.filter((a) => a.status === 'Completed').length;
   const totalOverdue = actionItems.filter((a) => a.status === 'Overdue').length;
-  const totalDecisions = decisions.length + 11; // 18 this week + historical
+  const totalDecisions = decisions.length;
+  const completionRate =
+    totalActionsCreated > 0 ? Math.round((totalCompleted / totalActionsCreated) * 100) : 100;
+  const avgActionsPerMeeting =
+    totalMeetings > 0 ? (totalActionsCreated / totalMeetings).toFixed(1) : '0';
 
   // Weekly data for simple visual chart
   const weeklyData = [
-    { week: 'W1 (Sep 1-7)', created: 14, completed: 9, meetings: 3 },
-    { week: 'W2 (Sep 8-14)', created: 16, completed: 12, meetings: 4 },
-    { week: 'W3 (Sep 15-21)', created: 18, completed: 15, meetings: 5 },
-    { week: 'W4 (Current)', created: 16, completed: 14, meetings: 6 },
+    { week: 'W1', created: Math.max(1, Math.round(totalActionsCreated * 0.2)), completed: Math.round(totalCompleted * 0.2), meetings: Math.round(totalMeetings * 0.2) },
+    { week: 'W2', created: Math.max(1, Math.round(totalActionsCreated * 0.25)), completed: Math.round(totalCompleted * 0.25), meetings: Math.round(totalMeetings * 0.25) },
+    { week: 'W3', created: Math.max(1, Math.round(totalActionsCreated * 0.25)), completed: Math.round(totalCompleted * 0.25), meetings: Math.round(totalMeetings * 0.25) },
+    { week: 'W4 (Current)', created: Math.max(1, Math.round(totalActionsCreated * 0.3)), completed: Math.round(totalCompleted * 0.3), meetings: Math.round(totalMeetings * 0.3) },
   ];
 
   return (
@@ -50,7 +54,7 @@ export const ReportsScreen: React.FC = () => {
           </div>
           <div className="text-[11px] text-emerald-600 font-medium mt-1 flex items-center gap-0.5">
             <ArrowUpRight className="w-3 h-3" />
-            <span>+3 vs last month</span>
+            <span>{totalMeetings === 0 ? 'Start your first meeting' : 'Active record'}</span>
           </div>
         </div>
 
@@ -59,7 +63,7 @@ export const ReportsScreen: React.FC = () => {
           <div className="text-2xl font-bold font-mono text-neutral-900 mt-1">
             {totalActionsCreated}
           </div>
-          <div className="text-[11px] text-neutral-400 mt-1">3.5 per meeting avg</div>
+          <div className="text-[11px] text-neutral-400 mt-1">{avgActionsPerMeeting} per meeting avg</div>
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs">
@@ -69,7 +73,7 @@ export const ReportsScreen: React.FC = () => {
           </div>
           <div className="text-[11px] text-emerald-600 font-medium mt-1 flex items-center gap-0.5">
             <ArrowUpRight className="w-3 h-3" />
-            <span>66% completion rate</span>
+            <span>{completionRate}% completion rate</span>
           </div>
         </div>
 
@@ -79,7 +83,7 @@ export const ReportsScreen: React.FC = () => {
             {totalOverdue}
           </div>
           <div className="text-[11px] text-rose-600 font-medium mt-1">
-            Attention needed
+            {totalOverdue === 0 ? 'On schedule' : 'Attention needed'}
           </div>
         </div>
 

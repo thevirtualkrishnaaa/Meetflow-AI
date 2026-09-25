@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useMeetingFlow } from '../../context/MeetingFlowContext';
+import { Avatar } from '../ui/Avatar';
 import {
   Bell,
   Check,
@@ -11,19 +12,47 @@ import {
   Sliders,
   Sparkles,
   Users,
+  Trash2,
+  RefreshCw,
+  LogOut,
+  UserPlus,
+  Building2,
+  Compass,
 } from 'lucide-react';
 
 export const SettingsScreen: React.FC = () => {
-  const { currentUser } = useMeetingFlow();
+  const {
+    currentUser,
+    workspaceProfile,
+    updateWorkspaceProfile,
+    resetToEmptyWorkspace,
+    loadSampleData,
+    logout,
+    setIsAddMemberModalOpen,
+  } = useMeetingFlow();
 
+  const [workspaceName, setWorkspaceName] = useState(workspaceProfile.name);
+  const [workspaceDomain, setWorkspaceDomain] = useState(workspaceProfile.domain);
   const [emailDigest, setEmailDigest] = useState(true);
   const [slackSync, setSlackSync] = useState(true);
   const [autoDetectDecisions, setAutoDetectDecisions] = useState(true);
   const [confidenceThreshold, setConfidenceThreshold] = useState(85);
   const [savedNotice, setSavedNotice] = useState(false);
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    updateWorkspaceProfile({
+      name: workspaceName.trim() || 'My Workspace',
+      domain: workspaceDomain.trim() || 'company.com',
+    });
+    setSavedNotice(true);
+    setTimeout(() => setSavedNotice(false), 2500);
+  };
+
+  const handleResetData = () => {
+    resetToEmptyWorkspace();
+    setConfirmResetOpen(false);
     setSavedNotice(true);
     setTimeout(() => setSavedNotice(false), 2500);
   };
@@ -36,15 +65,58 @@ export const SettingsScreen: React.FC = () => {
           Workspace Settings
         </h1>
         <p className="text-sm text-neutral-500 mt-1">
-          Configure meeting extraction rules, automated follow-up digests, and team integrations.
+          Configure meeting extraction rules, manage team members, and adjust workspace preferences.
         </p>
+      </div>
+
+      {/* Current User Profile Card */}
+      <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Avatar
+            name={currentUser.name}
+            initials={currentUser.initials}
+            colorClass={currentUser.avatarColor}
+            size="lg"
+          />
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-bold text-neutral-900">{currentUser.name}</h2>
+              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                Workspace Owner
+              </span>
+            </div>
+            <p className="text-xs text-neutral-500 mt-0.5">
+              {currentUser.role} · {currentUser.department}
+            </p>
+            <p className="text-[11px] text-neutral-400 font-mono mt-0.5">{currentUser.email}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsAddMemberModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-neutral-700 bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 rounded-lg transition-colors"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            <span>Add Teammate</span>
+          </button>
+          <button
+            type="button"
+            onClick={logout}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out</span>
+          </button>
+        </div>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
         {/* Workspace Profile */}
         <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-2xs space-y-4">
           <div className="flex items-center gap-2 border-b border-neutral-100 pb-3">
-            <Users className="w-4 h-4 text-indigo-600" />
+            <Building2 className="w-4 h-4 text-indigo-600" />
             <h2 className="text-sm font-semibold text-neutral-900">Workspace Profile</h2>
           </div>
 
@@ -55,8 +127,9 @@ export const SettingsScreen: React.FC = () => {
               </label>
               <input
                 type="text"
-                defaultValue="Acme Labs HQ"
-                className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-lg text-neutral-900"
+                value={workspaceName}
+                onChange={(e) => setWorkspaceName(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-lg text-neutral-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
               />
             </div>
             <div>
@@ -65,8 +138,9 @@ export const SettingsScreen: React.FC = () => {
               </label>
               <input
                 type="text"
-                defaultValue="acmelabs.com"
-                className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-lg text-neutral-900"
+                value={workspaceDomain}
+                onChange={(e) => setWorkspaceDomain(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-lg text-neutral-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600"
               />
             </div>
           </div>
@@ -107,7 +181,7 @@ export const SettingsScreen: React.FC = () => {
                 </span>
               </div>
               <p className="text-neutral-500 mb-2">
-                Items below this score require explicit human verification during the AI Review step.
+                Items below this score require human verification during the AI Review step.
               </p>
               <input
                 type="range"
@@ -185,6 +259,59 @@ export const SettingsScreen: React.FC = () => {
           </button>
         </div>
       </form>
+
+      {/* Workspace Data Management */}
+      <div className="bg-white p-6 rounded-xl border border-neutral-200 shadow-2xs space-y-4">
+        <div className="flex items-center gap-2 border-b border-neutral-100 pb-3">
+          <Trash2 className="w-4 h-4 text-rose-600" />
+          <h2 className="text-sm font-semibold text-neutral-900">Workspace Data Management</h2>
+        </div>
+
+        <p className="text-xs text-neutral-500">
+          Control your workspace content. You can start completely fresh with an empty state or load
+          reference demo scenarios.
+        </p>
+
+        <div className="flex flex-wrap items-center gap-3 pt-2">
+          {confirmResetOpen ? (
+            <div className="flex items-center gap-2 bg-rose-50 p-2.5 rounded-lg border border-rose-200">
+              <span className="text-xs text-rose-700 font-medium">Are you sure? This will remove all meetings and tasks.</span>
+              <button
+                type="button"
+                onClick={handleResetData}
+                className="px-3 py-1 bg-rose-600 text-white text-xs font-semibold rounded hover:bg-rose-700 transition-colors"
+              >
+                Yes, Reset Everything
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmResetOpen(false)}
+                className="px-2 py-1 text-xs text-neutral-600 hover:text-neutral-900"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmResetOpen(true)}
+              className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Reset to Clean Slate (Remove All Demo Data)</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={loadSampleData}
+            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-neutral-700 bg-neutral-50 hover:bg-neutral-100 border border-neutral-200 rounded-lg transition-colors"
+          >
+            <Compass className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Load Demo Reference Scenarios</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

@@ -61,6 +61,8 @@ export const TeamScreen: React.FC = () => {
     deleteTeamMember,
     setIsAddMemberModalOpen,
     openMeetingDetail,
+    currentUser,
+    workspaceProfile,
   } = useMeetingFlow();
 
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
@@ -160,7 +162,7 @@ export const TeamScreen: React.FC = () => {
     list.push({
       id: `act-join-${member.id}`,
       type: 'workspace_joined',
-      title: `Joined Acme Labs workspace as ${member.role}`,
+      title: `Joined ${workspaceProfile.name} as ${member.role}`,
       subtitle: `${member.department || 'General'} Department · Work email: ${member.email}`,
       badgeText: 'Team Member',
       badgeColor: 'bg-neutral-100 text-neutral-700 border-neutral-200',
@@ -414,7 +416,7 @@ export const TeamScreen: React.FC = () => {
                         </button>
                       </div>
                     ) : (
-                      member.id !== 'alex_m' && (
+                      member.id !== currentUser.id && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

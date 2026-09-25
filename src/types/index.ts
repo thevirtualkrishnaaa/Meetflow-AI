@@ -124,3 +124,22 @@ export interface PendingMeetingDraft {
     approved: boolean;
   }>;
 }
+
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  department: string;
+  avatarColor: string;
+  initials: string;
+  workspaceName: string;
+  createdAt: string;
+}
+
+export interface WorkspaceProfile {
+  name: string;
+  domain: string;
+  createdAt: string;
+}
+

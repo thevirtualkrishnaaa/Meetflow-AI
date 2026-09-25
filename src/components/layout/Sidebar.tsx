@@ -13,13 +13,12 @@ import {
   Users,
   Building2,
   Check,
+  LogOut,
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
-  const { currentScreen, setCurrentScreen, actionItems, currentUser } = useMeetingFlow();
-
-  const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
-  const [activeWorkspace, setActiveWorkspace] = useState('Acme Labs HQ');
+  const { currentScreen, setCurrentScreen, actionItems, currentUser, workspaceProfile, logout } =
+    useMeetingFlow();
 
   const overdueCount = actionItems.filter((a) => a.status === 'Overdue').length;
 
@@ -105,44 +104,20 @@ export const Sidebar: React.FC = () => {
         })}
       </div>
 
-      {/* Bottom of Sidebar: Workspace Selector & User Profile */}
+      {/* Bottom of Sidebar: Workspace Profile & User Account */}
       <div className="p-3 border-t border-neutral-200 space-y-2 bg-neutral-50/50">
-        {/* Workspace Switcher */}
-        <div className="relative">
-          <button
-            onClick={() => setWorkspaceMenuOpen(!workspaceMenuOpen)}
-            className="w-full flex items-center justify-between px-2.5 py-1.5 text-xs text-neutral-700 hover:bg-neutral-100 rounded-md transition-colors"
-          >
-            <div className="flex items-center gap-2 truncate">
-              <Building2 className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-              <span className="truncate font-medium">{activeWorkspace}</span>
-            </div>
-            <ChevronDown className="w-3 h-3 text-neutral-400 shrink-0" />
-          </button>
-
-          {workspaceMenuOpen && (
-            <div className="absolute bottom-full left-0 right-0 mb-1 bg-white rounded-lg shadow-lg border border-neutral-200 py-1 z-30">
-              <div className="px-3 py-1 text-[10px] uppercase font-semibold text-neutral-400">
-                Workspaces
-              </div>
-              {['Acme Labs HQ', 'Acme Labs EU', 'Personal Sandbox'].map((ws) => (
-                <button
-                  key={ws}
-                  onClick={() => {
-                    setActiveWorkspace(ws);
-                    setWorkspaceMenuOpen(false);
-                  }}
-                  className="w-full flex items-center justify-between px-3 py-1.5 text-xs text-neutral-700 hover:bg-neutral-50 text-left"
-                >
-                  <span>{ws}</span>
-                  {activeWorkspace === ws && <Check className="w-3 h-3 text-indigo-600" />}
-                </button>
-              ))}
-            </div>
-          )}
+        {/* Workspace Display */}
+        <div className="px-2.5 py-1.5 text-xs text-neutral-700 bg-white rounded-md border border-neutral-200 flex items-center justify-between">
+          <div className="flex items-center gap-2 truncate">
+            <Building2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <span className="truncate font-semibold text-neutral-900">{workspaceProfile.name}</span>
+          </div>
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600 font-medium">
+            Live
+          </span>
         </div>
 
-        {/* User Profile */}
+        {/* User Profile & Sign Out */}
         <div className="flex items-center justify-between px-2 py-1.5 bg-white rounded-lg border border-neutral-200/80 shadow-2xs">
           <div className="flex items-center gap-2.5 truncate">
             <Avatar
@@ -160,7 +135,13 @@ export const Sidebar: React.FC = () => {
               </div>
             </div>
           </div>
-          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="Online" />
+          <button
+            onClick={logout}
+            className="p-1 text-neutral-400 hover:text-rose-600 hover:bg-neutral-100 rounded transition-colors"
+            title="Sign Out"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
     </aside>

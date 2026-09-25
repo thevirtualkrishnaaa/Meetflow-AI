@@ -20,19 +20,25 @@ import {
 } from 'lucide-react';
 
 export const StartMeetingModal: React.FC = () => {
-  const { isStartMeetingOpen, setIsStartMeetingOpen, startProcessingMeeting, teamMembers } =
+  const { isStartMeetingOpen, setIsStartMeetingOpen, startProcessingMeeting, teamMembers, currentUser } =
     useMeetingFlow();
 
   const [mode, setMode] = useState<'record' | 'upload' | 'import'>('record');
-  const [title, setTitle] = useState('Product Strategy & Roadmap Sync');
-  const [project, setProject] = useState('Product Core');
-  const [selectedParticipants, setSelectedParticipants] = useState<string[]>([
-    'alex_m',
-    'sarah_c',
-    'elena_r',
-    'james_w',
-  ]);
-  const [rawTranscript, setRawTranscript] = useState(SAMPLE_TRANSCRIPT_PRESETS[0].text);
+  const [title, setTitle] = useState('Team Alignment & Execution Sync');
+  const [project, setProject] = useState('Product');
+  const [selectedParticipants, setSelectedParticipants] = useState<string[]>(() =>
+    teamMembers.map((m) => m.id)
+  );
+  const [rawTranscript, setRawTranscript] = useState(
+    'Alex: Let us align on this week\'s key deliverables and review open tasks.\nSarah: I will finalize the design specs and share them with engineering by Thursday.\nJames: Sounds good. I will verify the deployment pipeline and monitor server metrics.'
+  );
+
+  // Sync participants with current team when modal opens
+  useEffect(() => {
+    if (isStartMeetingOpen && teamMembers.length > 0) {
+      setSelectedParticipants(teamMembers.map((m) => m.id));
+    }
+  }, [isStartMeetingOpen, teamMembers]);
 
   // Audio Recording States
   const [isRecording, setIsRecording] = useState(false);

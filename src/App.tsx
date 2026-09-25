@@ -16,11 +16,17 @@ import { ReportsScreen } from './components/screens/ReportsScreen';
 import { ProcessingScreen } from './components/screens/ProcessingScreen';
 import { AiReviewScreen } from './components/screens/AiReviewScreen';
 import { SettingsScreen } from './components/screens/SettingsScreen';
+import { AuthScreen } from './components/auth/AuthScreen';
 import { X } from 'lucide-react';
 
 const AppContent: React.FC = () => {
-  const { currentScreen, isAddMemberModalOpen, setIsAddMemberModalOpen } = useMeetingFlow();
+  const { currentScreen, isAddMemberModalOpen, setIsAddMemberModalOpen, isAuthenticated } =
+    useMeetingFlow();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  if (!isAuthenticated) {
+    return <AuthScreen />;
+  }
 
   const renderScreen = () => {
     switch (currentScreen) {
